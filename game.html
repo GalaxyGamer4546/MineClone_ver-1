@@ -220,6 +220,213 @@
     pointer-events: none;
   }
   #creative-badge.show { display: block; }
+
+    /* ============================================================
+     TITLE / CREATE / LOADING SCREENS
+     ============================================================ */
+  .screen-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(circle at 50% 30%, #4a90d0 0%, #1a2a4a 60%, #0a1220 100%);
+    z-index: 25;
+    font-family: system-ui, sans-serif;
+    color: #fff;
+    overflow: hidden;
+  }
+  .screen-overlay::before {
+    /* subtle vignette */
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, transparent 40%, rgba(0,0,0,.55) 100%);
+    pointer-events: none;
+  }
+  .title-panel, .loading-panel {
+    position: relative;
+    z-index: 1;
+    background: rgba(20, 26, 40, .78);
+    border: 3px solid rgba(120, 140, 180, .55);
+    border-radius: 16px;
+    padding: 40px 48px 34px;
+    min-width: 380px;
+    max-width: 520px;
+    box-shadow:
+      0 24px 60px rgba(0,0,0,.7),
+      inset 0 1px 0 rgba(255,255,255,.08);
+    backdrop-filter: blur(6px);
+    text-align: center;
+  }
+  .game-title {
+    margin: 0 0 4px;
+    font-size: 42px;
+    letter-spacing: 3px;
+    font-weight: 800;
+    text-shadow:
+      0 3px 0 #1a2a4a,
+      0 6px 18px rgba(0,0,0,.8);
+    background: linear-gradient(180deg, #ffe89a 0%, #ffb040 55%, #d07018 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(80,40,0,.35);
+  }
+  .game-subtitle {
+    margin: 0 0 32px;
+    font-size: 13px;
+    color: #9fb4d0;
+    letter-spacing: 1px;
+  }
+  .screen-title {
+    margin: 0 0 26px;
+    font-size: 24px;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    color: #f0f4ff;
+    text-shadow: 0 2px 8px rgba(0,0,0,.6);
+  }
+  .title-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+  .title-btn {
+    display: block;
+    width: 100%;
+    padding: 13px 20px;
+    background: linear-gradient(180deg, #3a445a 0%, #2b3244 100%);
+    color: #e8eefc;
+    border: 2px solid #5a6a86;
+    border-radius: 8px;
+    font: 600 15px/1 system-ui, sans-serif;
+    letter-spacing: .5px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform .08s, background .12s, border-color .12s, box-shadow .12s;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.08),
+      0 2px 0 rgba(0,0,0,.35);
+  }
+  .title-btn:hover {
+    background: linear-gradient(180deg, #4a567a 0%, #37415a 100%);
+    border-color: #7a8eb0;
+    transform: translateY(-1px);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.12),
+      0 4px 0 rgba(0,0,0,.35);
+  }
+  .title-btn:active {
+    transform: translateY(1px);
+    box-shadow:
+      inset 0 2px 4px rgba(0,0,0,.4),
+      0 0 0 rgba(0,0,0,.35);
+  }
+  .title-btn.primary {
+    background: linear-gradient(180deg, #4a9a5a 0%, #2e6b3a 100%);
+    border-color: #6bc07a;
+    color: #fff;
+  }
+  .title-btn.primary:hover {
+    background: linear-gradient(180deg, #5aaa6a 0%, #3a7b4a 100%);
+    border-color: #8bd09a;
+  }
+  .title-footer {
+    font-size: 11px;
+    color: #6a7a94;
+    letter-spacing: .5px;
+  }
+  .field-group {
+    text-align: left;
+    margin-bottom: 20px;
+  }
+  .field-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #c0cee0;
+    margin-bottom: 6px;
+    letter-spacing: .5px;
+  }
+  .field-label .optional {
+    font-weight: 400;
+    color: #7a8aa0;
+    font-size: 11px;
+  }
+  .field-input {
+    display: block;
+    width: 100%;
+    padding: 11px 14px;
+    background: rgba(0,0,0,.4);
+    color: #fff;
+    border: 2px solid #4a5670;
+    border-radius: 8px;
+    font: 15px ui-monospace, Menlo, monospace;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color .12s, box-shadow .12s;
+  }
+  .field-input:focus {
+    border-color: #6bc07a;
+    box-shadow: 0 0 0 3px rgba(107, 192, 122, .2);
+  }
+  .field-hint {
+    margin-top: 5px;
+    font-size: 11px;
+    color: #7a8a9e;
+  }
+  .create-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 26px;
+  }
+  .create-buttons .title-btn {
+    flex: 1;
+  }
+  /* ---- Loading screen ---- */
+  .loading-panel {
+    min-width: 480px;
+    padding: 46px 56px 40px;
+  }
+  .loading-bar-outer {
+    height: 22px;
+    background: rgba(0,0,0,.5);
+    border: 2px solid #4a5670;
+    border-radius: 12px;
+    padding: 3px;
+    overflow: hidden;
+    margin-bottom: 18px;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,.6);
+  }
+  .loading-bar-inner {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #4a9a5a 0%, #8bd07a 50%, #4a9a5a 100%);
+    background-size: 200% 100%;
+    border-radius: 9px;
+    transition: width .18s linear;
+    animation: barShine 2.2s linear infinite;
+    box-shadow: 0 0 12px rgba(139, 208, 122, .5);
+  }
+  @keyframes barShine {
+    0%   { background-position: 0% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .loading-status {
+    font-size: 13px;
+    color: #a0b4cc;
+    letter-spacing: .3px;
+    min-height: 18px;
+    margin-bottom: 4px;
+  }
+  .loading-pct {
+    font: 600 14px ui-monospace, Menlo, monospace;
+    color: #8bd07a;
+    letter-spacing: 1px;
+  }
 </style>
 </head>
 <body>
@@ -227,10 +434,68 @@
 <div id="crosshair"></div>
 <div id="hud"></div>
 <div id="state-icon"></div>
-<div id="lock">
-  <h1>MiniTerra 3D</h1>
+<!-- ============================================================
+     TITLE SCREEN
+     ============================================================ -->
+
+<div id="lock" style="display:none;">
   <p>Click to play</p>
-  <div class="hint">WASD move · Mouse look · Space jump · Shift sprint · L-click break · R-click place · 1-9 select · Esc pause · E inventory · O save · P load · T texture preview · F3 debug</div>
+  <div class="hint">WASD move · Mouse look · Space jump · L-Shift sprint · R-Shift crouch · L-click break · R-click place · 1-9 select · Esc/P pause · E inventory · F3 debug</div>
+</div>
+
+<div id="title-screen" class="screen-overlay">
+  <div class="title-panel">
+    <h1 class="game-title">MiniTerra 3D</h1>
+    <p class="game-subtitle">An infinite voxel sandbox</p>
+    <div class="title-buttons">
+      <button class="title-btn primary" id="btn-play">▶ Play</button>
+      <button class="title-btn" id="btn-create">✦ Create New World</button>
+      <button class="title-btn" id="btn-load">📂 Load World</button>
+      <button class="title-btn" id="btn-title-settings">⚙ Settings</button>
+    </div>
+    <div class="title-footer">
+      <span id="title-version">MiniTerra 3D · v1.0</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     CREATE WORLD SCREEN
+     ============================================================ -->
+<div id="create-screen" class="screen-overlay" style="display:none;">
+  <div class="title-panel">
+    <h2 class="screen-title">Create New World</h2>
+
+    <div class="field-group">
+      <label class="field-label" for="world-seed">World Seed</label>
+      <input type="text" id="world-seed" class="field-input" value="11111" maxlength="32" spellcheck="false">
+      <div class="field-hint">Any text works — letters and numbers both. Leave blank for random.</div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label" for="world-name">World Name <span class="optional">(optional)</span></label>
+      <input type="text" id="world-name" class="field-input" value="New World" maxlength="32">
+    </div>
+
+    <div class="create-buttons">
+      <button class="title-btn" id="btn-create-back">◀ Back</button>
+      <button class="title-btn primary" id="btn-create-go">Generate World ▶</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     LOADING SCREEN
+     ============================================================ -->
+<div id="loading-screen" class="screen-overlay" style="display:none;">
+  <div class="loading-panel">
+    <h2 class="screen-title" id="loading-title">Generating World</h2>
+    <div class="loading-bar-outer">
+      <div class="loading-bar-inner" id="loading-bar"></div>
+    </div>
+    <div class="loading-status" id="loading-status">Preparing...</div>
+    <div class="loading-pct" id="loading-pct">0%</div>
+  </div>
 </div>
 
 <!-- Pause Menu -->
@@ -308,6 +573,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
 <script>
+
 
 // ============================================================
 // TERRAIN SHAPE — appended, defines surfaceHeight and helpers
@@ -475,7 +741,7 @@ const BLOCKS = {
   61: { name: 'crimson_leaves',  color: 0x8a1830, transparent: true },
   62: { name: 'bamboo_stalk',    color: 0xa8c060, transparent: true, solid: false },
   63: { name: 'snow_layer',      color: 0xffffff },
-  64: { name: 'autumn_grass',    color: 0xb07030, solid: false },
+  64: { name: 'autumn_grass',    color: 0xb07030, solid: true },
 };
 
 const HARDNESS = {
@@ -716,7 +982,7 @@ const MOBS = {
     name: 'Squirrel', hp: 4, speed: 0.11,
     size: { w: 0.4, h: 0.5, d: 0.5 },
     passive: true, spawnLight: 'day', spawnSurface: true,
-    spawnBiome: [14, 15, 5, 19, 22, 20],  // Maple, Autumn, Forest, Bamboo, Meadow, Redwood
+    spawnBiome: [14, 15, 5, 22, 20],  // Maple, Autumn, Forest, Meadow, Redwood
     drops: [{ item: 'squirrel_tail', min: 0, max: 1 }],
     bodyColor: 0xa05028, headColor: 0xb86030, legColor: 0x7a3818, model: 'squirrel',
   },
@@ -759,14 +1025,6 @@ const MOBS = {
     spawnBiome: [18],                     // Rainforest
     drops: [{ item: 'toucan_beak', min: 0, max: 1 }, { item: 'feather', min: 1, max: 2 }],
     bodyColor: 0x101018, headColor: 0x101018, legColor: 0xff8020, model: 'toucan',
-  },
-  panda: {
-    name: 'Panda', hp: 14, speed: 0.04,
-    size: { w: 0.9, h: 1.1, d: 1.2 },
-    passive: true, spawnLight: 'day', spawnSurface: true,
-    spawnBiome: [19],                     // Bamboo Grove
-    drops: [{ item: 'bamboo_shoot', min: 1, max: 2 }],
-    bodyColor: 0xf0f0f0, headColor: 0xf0f0f0, legColor: 0x202020, model: 'panda',
   },
   owl: {
     name: 'Owl', hp: 6, speed: 0.07,
@@ -944,11 +1202,10 @@ const BIOME = {
   FROZEN_LAKE:   16,
   BLOSSOM_HILLS: 17,
   RAINFOREST:    18,
-  BAMBOO_GROVE:  19,
-  REDWOOD_FOREST:20,
-  MUSHROOM_ISLE: 21,
-  MEADOW:        22,
-  CRIMSON_GROVE: 23,
+  REDWOOD_FOREST:19,
+  MUSHROOM_ISLE: 20,
+  MEADOW:        21,
+  CRIMSON_GROVE: 22,
 };
 
 function temperatureAt(x, z) {
@@ -1001,10 +1258,6 @@ function biomeAt(x, z, h) {
 
   // --- Frozen Lake: cold + very humid, low elevation only ---
   if (temp < 0.32 && humid > 0.6 && h < SEA_LEVEL + 20) return BIOME.FROZEN_LAKE;
-
-  // --- Bamboo Grove: warm + wet, patchy ---
-  const bambooNoise = fbm(x * 0.006 + 17000, z * 0.006 + 17000);
-  if (temp > 0.55 && humid > 0.6 && bambooNoise > 0.58) return BIOME.BAMBOO_GROVE;
 
   // --- Redwood Forest: cool temperate + very humid ---
   const redwoodNoise = fbm(x * 0.005 + 19000, z * 0.005 + 19000);
@@ -1126,8 +1379,6 @@ const TREE_SPECIES = {
               shape: 'blossom',  bushChance: 0.7,  bushRadius: 2, bushHeight: 1 },
   kapok:    { name: 'Kapok',     weight: 20, log: 47, leaves: 49, planks: 48,
               shape: 'kapok',    bushChance: 0.3,  bushRadius: 2, bushHeight: 1 },
-  bamboo:   { name: 'Bamboo',    weight: 40, log: 50, leaves: 52, planks: 51,
-              shape: 'bamboo',   bushChance: 0.2,  bushRadius: 1, bushHeight: 1 },
   redwood:  { name: 'Redwood',   weight: 30, log: 53, leaves: 55, planks: 54,
               shape: 'redwood',  bushChance: 0.4,  bushRadius: 2, bushHeight: 1 },
   mushroom: { name: 'Mushroom',  weight: 25, log: 56, leaves: 58, planks: 57,
@@ -1139,14 +1390,9 @@ const TREE_SPECIES = {
 const TREE_SPECIES_LIST = Object.values(TREE_SPECIES);
 
 function pickSpecies(rand) {
-  let total = 0;
-  for (const s of TREE_SPECIES_LIST) total += s.weight;
-  let r = rand * total;
-  for (const s of TREE_SPECIES_LIST) {
-    r -= s.weight;
-    if (r <= 0) return s;
-  }
-  function pickSpecies(rand) {
+}
+
+function pickSpecies(rand) {
   let total = 0;
   for (const s of TREE_SPECIES_LIST) total += s.weight;
   let r = rand * total;
@@ -1156,15 +1402,14 @@ function pickSpecies(rand) {
   }
   return TREE_SPECIES_LIST[0];
 }
-}
 
 // ============================================================
 // CAVES + RAVINES
 // ============================================================
-function isCaveAt(x, y, z) {
+function isCaveAt(x, y, z, surfParam) {
   if (y < 2 || y > WORLD_H - 4) return false;
 
-  const surf = surfaceHeight(x, z);
+  const surf = (surfParam !== undefined) ? surfParam : surfaceHeight(x, z);
   // Above the surface: normally no caves. But underwater, caves can
   // break through the seafloor — that's how water caves form.
   if (y > surf - 2) {
@@ -1253,13 +1498,26 @@ function isRavineAt(x, y, z) {
   const baseX = cx * CHUNK_SIZE;
   const baseZ = cz * CHUNK_SIZE;
 
-  // ---- 1) Terrain (with mountains and biomes) ----
+    // ---- 0) Precompute height + biome once per column ----
+  const heightCache = new Int16Array(CHUNK_SIZE * CHUNK_SIZE);
+  const biomeCache  = new Int8Array(CHUNK_SIZE * CHUNK_SIZE);
   for (let lx = 0; lx < CHUNK_SIZE; lx++) {
     for (let lz = 0; lz < CHUNK_SIZE; lz++) {
       const wx = baseX + lx;
       const wz = baseZ + lz;
       const h = surfaceHeight(wx, wz);
-      const biome = biomeAt(wx, wz, h);
+      heightCache[lx + lz * CHUNK_SIZE] = h;
+      biomeCache[lx + lz * CHUNK_SIZE] = biomeAt(wx, wz, h);
+    }
+  }
+
+  // ---- 1) Terrain (with mountains and biomes) ----
+  for (let lx = 0; lx < CHUNK_SIZE; lx++) {
+    for (let lz = 0; lz < CHUNK_SIZE; lz++) {
+      const wx = baseX + lx;
+      const wz = baseZ + lz;
+      const h = heightCache[lx + lz * CHUNK_SIZE];
+      const biome = biomeCache[lx + lz * CHUNK_SIZE];
 
       // Decide surface + subsurface blocks based on biome
       let surfaceBlock = 1;   // default grass
@@ -1333,8 +1591,6 @@ function isRavineAt(x, y, z) {
           case BIOME.RAINFOREST:
             // dense dark green grass with podzol-ish dirt
             surfaceBlock = 1; subBlock = 2; break;
-          case BIOME.BAMBOO_GROVE:
-            surfaceBlock = 1; subBlock = 2; break;
           case BIOME.REDWOOD_FOREST:
             surfaceBlock = 1; subBlock = 2; break;
           case BIOME.MUSHROOM_ISLE:
@@ -1388,8 +1644,8 @@ function isRavineAt(x, y, z) {
     for (let lz = 0; lz < CHUNK_SIZE; lz++) {
       const wx = baseX + lx;
       const wz = baseZ + lz;
-      const h = surfaceHeight(wx, wz);
-      const biome = biomeAt(wx, wz, h);
+      const h = heightCache[lx + lz * CHUNK_SIZE];
+      const biome = biomeCache[lx + lz * CHUNK_SIZE];
       if (biome !== BIOME.REEF) continue;
 
       // Sprinkle coral on the reef floor
@@ -1407,8 +1663,8 @@ function isRavineAt(x, y, z) {
     for (let lz = 0; lz < CHUNK_SIZE; lz++) {
       const wx = baseX + lx;
       const wz = baseZ + lz;
-      const h = surfaceHeight(wx, wz);
-      const biome = biomeAt(wx, wz, h);
+      const h = heightCache[lx + lz * CHUNK_SIZE];
+      const biome = biomeCache[lx + lz * CHUNK_SIZE];
 
       // Kelp grows in cold/temperate shallow water — not in reefs or deep ocean
       if (biome !== BIOME.OCEAN_SHALLOW) continue;
@@ -1456,8 +1712,8 @@ function isRavineAt(x, y, z) {
     for (let lz = 0; lz < CHUNK_SIZE; lz++) {
       const wx = baseX + lx;
       const wz = baseZ + lz;
-      const h = surfaceHeight(wx, wz);
-      const biome = biomeAt(wx, wz, h);
+      const h = heightCache[lx + lz * CHUNK_SIZE];
+      const biome = biomeCache[lx + lz * CHUNK_SIZE];
       if (biome !== BIOME.FROZEN_LAKE) continue;
 
       // Freeze the top of any water column
@@ -1475,11 +1731,12 @@ function isRavineAt(x, y, z) {
     for (let lz = 0; lz < CHUNK_SIZE; lz++) {
       const wx = baseX + lx;
       const wz = baseZ + lz;
+      const surfH = heightCache[lx + lz * CHUNK_SIZE];
       for (let y = 1; y < WORLD_H - 1; y++) {
         const i = localIdx(lx, y, lz);
         const b = data[i];
         if (b === 0 || b === 11) continue;
-        if (isCaveAt(wx, y, wz)) data[i] = 0;
+        if (isCaveAt(wx, y, wz, surfH)) data[i] = 0;
       }
     }
   }
@@ -1500,33 +1757,7 @@ function isRavineAt(x, y, z) {
 
   // ---- 6) Trees ----
   placeTreesInChunk(cx, cz, data);
-    // ---- 6b) Extra bamboo density in Bamboo Grove ----
-  for (let lx = 0; lx < CHUNK_SIZE; lx++) {
-    for (let lz = 0; lz < CHUNK_SIZE; lz++) {
-      const wx = baseX + lx;
-      const wz = baseZ + lz;
-      const h = surfaceHeight(wx, wz);
-      if (h <= SEA_LEVEL) continue;
-      const biome = biomeAt(wx, wz, h);
-      if (biome !== BIOME.BAMBOO_GROVE) continue;
-
-      // Bamboo starts on grass. Also skip if a tree is already there.
-      const top = data[localIdx(lx, h + 1, lz)];
-      if (top !== 0) continue;
-
-      // Density: 1 in 3 columns gets a bamboo stalk
-      if (hash2(wx * 19 + 3, wz * 23 + 7) > 0.33) continue;
-
-      const stalkH = 4 + Math.floor(hash2(wx * 31, wz * 41) * 8);   // 4-11
-      for (let i = 0; i < stalkH; i++) {
-        if (h + 1 + i >= WORLD_H) break;
-        const cur = data[localIdx(lx, h + 1 + i, lz)];
-        if (cur !== 0 && cur !== 11) break;
-        data[localIdx(lx, h + 1 + i, lz)] = (i === stalkH - 1) ? 62 : 50;
-      }
-    }
   }
-}
 
 function scatterOresInChunk(cx, cz, data) {
   // Each ore has a "depth curve" — a multiplier that grows as Y drops.
@@ -1636,9 +1867,6 @@ function pickSpeciesForBiome(biome, rand) {
     case BIOME.RAINFOREST:
       pool = [TREE_SPECIES.kapok, TREE_SPECIES.kapok, TREE_SPECIES.bigOak];
       break;
-    case BIOME.BAMBOO_GROVE:
-      pool = [TREE_SPECIES.bamboo, TREE_SPECIES.bamboo, TREE_SPECIES.bamboo, TREE_SPECIES.oak];
-      break;
     case BIOME.REDWOOD_FOREST:
       pool = [TREE_SPECIES.redwood, TREE_SPECIES.redwood, TREE_SPECIES.pine];
       break;
@@ -1670,7 +1898,6 @@ function pickSpeciesForBiome(biome, rand) {
   if (biome === BIOME.PLAINS && rand > 0.4) return null;
   if (biome === BIOME.SAVANNA && rand > 0.15) return null;
   if (biome === BIOME.MEADOW && rand > 0.55) return null;   // meadows are sparse
-  if (biome === BIOME.BAMBOO_GROVE && rand > 0.75) return null; // thick clumps
 
   let total = 0;
   for (const s of pool) total += s.weight;
@@ -1703,15 +1930,9 @@ function placeTreesInChunk(cx, cz, data) {
       if (th <= SEA_LEVEL) continue;
       if (th > SEA_LEVEL + 50) continue;
 
-      // Trunk must be in this chunk
-      const localTX = tx - baseX;
-      const localTZ = tz - baseZ;
-      const trunkInChunk = localTX >= 0 && localTX < CHUNK_SIZE
-                        && localTZ >= 0 && localTZ < CHUNK_SIZE;
-      if (!trunkInChunk) continue;
-
-      // Ground check
-      const groundBlock = data[localIdx(localTX, th, localTZ)];
+      // Ground check — use getBlockRaw so it works even when the
+      // trunk is outside this chunk (leaves still spill in).
+      const groundBlock = getBlockRaw(tx, th, tz, cx, cz, data, baseX, baseZ);
       if (groundBlock === 0 || groundBlock === 11) continue;
 
       const biome = biomeAt(tx, tz, th);
@@ -1881,9 +2102,18 @@ function setBlockRaw(wx, wy, wz, v, curCx, curCz, curData, baseX, baseZ) {
   }
   const ncx = toChunkCoord(wx);
   const ncz = toChunkCoord(wz);
-  const nc = getChunk(ncx, ncz, true);
+  const nkey = chunkKey(ncx, ncz);
+  const nc = chunks.get(nkey);
+  if (!nc) return;
   nc.data[localIdx(toLocalCoord(wx), wy, toLocalCoord(wz))] = v;
+  // If that neighbor chunk is already meshed, mark it so the new
+  // block shows up when the mesh next rebuilds.
+  if (chunkMeshes[nkey]) {
+    chunksNeedingRemesh.add(nkey);
+  }
 }
+
+  
 
 function getBlockRaw(wx, wy, wz, curCx, curCz, curData, baseX, baseZ) {
   if (wy < 0 || wy >= WORLD_H) return 0;
@@ -1920,6 +2150,8 @@ function leafAt(sp, ctx, wx, wy, wz) {
   if (existing !== 0 && existing !== 11 && existing !== sp.leaves) return;
   setBlockRaw(wx, wy, wz, sp.leaves, ctx.cx, ctx.cz, ctx.data, ctx.baseX, ctx.baseZ);
 }
+
+// ---- helper: write a log (trunk block) ----
 function logAt(sp, ctx, wx, wy, wz) {
   const existing = getBlockRaw(wx, wy, wz, ctx.cx, ctx.cz, ctx.data, ctx.baseX, ctx.baseZ);
   if (existing !== 0 && existing !== 11 && existing !== sp.log && existing !== sp.leaves) return;
@@ -2299,42 +2531,6 @@ TREE_SHAPES.kapok = function (sp, ctx) {
       if (d2 > layerR * layerR + 1) continue;
       leafAt(sp, ctx, ctx.tx + dx, topY - 1, ctx.tz + dz);
     }
-  }
-};
-
-// ============================================================
-// BAMBOO — cluster of thin stalks
-// ============================================================
-TREE_SHAPES.bamboo = function (sp, ctx) {
-  const stalkCount = 3 + Math.floor(ctx.r1 * 6);   // 3-8
-  for (let s = 0; s < stalkCount; s++) {
-    const rnd = hash2(ctx.tx * 71 + s * 17, ctx.tz * 83 + s * 23);
-    const rnd2 = hash2(ctx.tx * 91 + s * 13, ctx.tz * 97 + s * 19);
-    const rnd3 = hash2(ctx.tx * 101 + s * 31, ctx.tz * 103 + s * 11);
-
-    // Offset each stalk within a 3-wide area
-    const ox = Math.floor(rnd * 5) - 2;
-    const oz = Math.floor(rnd2 * 5) - 2;
-    const sx = ctx.tx + ox;
-    const sz = ctx.tz + oz;
-
-    const h = 6 + Math.floor(rnd3 * 8);            // 6-14
-
-    // Stalk: bamboo_block column
-    for (let i = 0; i < h; i++) {
-      const existing = getBlockRaw(sx, ctx.ty + i, sz, ctx.cx, ctx.cz, ctx.data, ctx.baseX, ctx.baseZ);
-      if (existing !== 0 && existing !== 11 && existing !== sp.log) continue;
-      setBlockRaw(sx, ctx.ty + i, sz, sp.log, ctx.cx, ctx.cz, ctx.data, ctx.baseX, ctx.baseZ);
-    }
-    // Leaves at top: small cross of bamboo_leaves
-    const topY = ctx.ty + h;
-    for (let dx = -1; dx <= 1; dx++) {
-      for (let dz = -1; dz <= 1; dz++) {
-        if (Math.abs(dx) + Math.abs(dz) > 1) continue;
-        leafAt(sp, ctx, sx + dx, topY, sz + dz);
-      }
-    }
-    leafAt(sp, ctx, sx, topY + 1, sz);
   }
 };
 
@@ -3743,6 +3939,7 @@ const FACE_VERTS = [
 ];
 
 const chunkMeshes = {};
+const chunksNeedingRemesh = new Set();
 
 function buildChunkGeometry(cx, cz) {
   const chunk = getChunk(cx, cz, true);
@@ -3862,7 +4059,7 @@ const CHUNKS_PER_FRAME = 2;
 const chunkGenQueue = [];    // { cx, cz }  — needs generateChunk
 const chunkMeshQueue = [];   // { cx, cz }  — needs rebuildChunk
 const CHUNKS_GEN_PER_FRAME  = 1;   // worldgen is expensive — do 1 per frame
-const CHUNKS_MESH_PER_FRAME = 3;   // meshing is cheaper — do 3 per frame
+const CHUNKS_MESH_PER_FRAME = 2;   // meshing is cheaper — do 2 per frame
 
 function updateChunkStreaming() {
   const pcx = toChunkCoord(player.pos.x);
@@ -3939,6 +4136,22 @@ function updateChunkStreaming() {
     }
     meshBudget--;
   }
+
+  // Remesh any chunks that had cross-chunk blocks written into them
+  // during generation. Without this, leaves and logs placed by a
+  // neighboring chunk's tree would be invisible until you broke
+  // a block next to them.
+  if (chunksNeedingRemesh.size > 0) {
+    const toRebuild = Array.from(chunksNeedingRemesh);
+    chunksNeedingRemesh.clear();
+    for (const key of toRebuild) {
+      const [cx, cz] = key.split(',').map(Number);
+      if (chunkMeshes[key]) {
+        rebuildChunk(cx, cz);
+      }
+    }
+  }
+
 
   // HUD
   const cc = document.getElementById('chunkcount');
@@ -6745,6 +6958,240 @@ const gameState = {
 
 let gamePaused = false;
 
+// ============================================================
+// TITLE / CREATE / LOADING — screen state machine
+// ============================================================
+// Possible states: 'title' | 'creating' | 'loading' | 'playing'
+let appState = 'title';
+
+const titleScreenEl    = document.getElementById('title-screen');
+const createScreenEl   = document.getElementById('create-screen');
+const loadingScreenEl  = document.getElementById('loading-screen');
+const loadingBarEl     = document.getElementById('loading-bar');
+const loadingStatusEl  = document.getElementById('loading-status');
+const loadingPctEl     = document.getElementById('loading-pct');
+const loadingTitleEl   = document.getElementById('loading-title');
+const seedInputEl      = document.getElementById('world-seed');
+const nameInputEl      = document.getElementById('world-name');
+
+function showScreen(name) {
+  appState = name;
+  titleScreenEl.style.display   = (name === 'title')    ? 'flex' : 'none';
+  createScreenEl.style.display  = (name === 'creating') ? 'flex' : 'none';
+  loadingScreenEl.style.display = (name === 'loading')  ? 'flex' : 'none';
+  // Hide gameplay lock while menus are up
+  if (lockEl) lockEl.style.display = 'none';
+}
+
+function setLoadingProgress(pct, statusText) {
+  if (loadingBarEl)    loadingBarEl.style.width = Math.max(0, Math.min(100, pct * 100)) + '%';
+  if (loadingPctEl)    loadingPctEl.textContent = Math.round(pct * 100) + '%';
+  if (statusText && loadingStatusEl) loadingStatusEl.textContent = statusText;
+}
+
+// ---- Button handlers ----
+document.getElementById('btn-play').addEventListener('click', function () {
+  // Try to load an existing save; if none, go to Create World.
+  const raw = localStorage.getItem('miniterra3d.save.v3');
+  if (raw) {
+    // We already have a save — load it (real loading screen comes in Reply 2,
+    // for now just jump straight into the game).
+    showScreen('loading');
+    setLoadingProgress(0, 'Loading save...');
+    realLoading(function () { enterGame(); });
+  } else {
+    showScreen('creating');
+  }
+});
+
+document.getElementById('btn-create').addEventListener('click', function () {
+  showScreen('creating');
+});
+
+document.getElementById('btn-load').addEventListener('click', function () {
+  const raw = localStorage.getItem('miniterra3d.save.v3');
+  if (!raw) {
+    alert('No saved world found.');
+    return;
+  }
+  showScreen('loading');
+  setLoadingProgress(0, 'Loading save...');
+  realLoading(function () { enterGame(); });
+});
+
+document.getElementById('btn-title-settings').addEventListener('click', function () {
+  // Reuse the existing settings menu
+  settingsMenuEl.classList.add('open');
+  // Track that we opened settings from the title so "Back" returns here
+  settingsMenuEl.dataset.fromTitle = '1';
+});
+
+document.getElementById('btn-create-back').addEventListener('click', function () {
+  showScreen('title');
+});
+
+document.getElementById('btn-create-go').addEventListener('click', function () {
+  const rawSeed = (seedInputEl.value || '').trim();
+  // Empty = random seed
+  if (rawSeed === '') {
+    seed = Math.floor(Math.random() * 1e9);
+  } else if (/^-?\d+$/.test(rawSeed)) {
+    // Pure number — use directly
+    seed = parseInt(rawSeed, 10);
+    if (!Number.isFinite(seed)) seed = 11111;
+  } else {
+    // Text — hash to a number
+    seed = stringToSeed(rawSeed);
+  }
+  // Reset player, chunks, inventory, stats
+  resetWorldForNewSeed();
+  // Kick off the (currently fake) loading
+  showScreen('loading');
+  loadingTitleEl.textContent = 'Generating World';
+  setLoadingProgress(0, 'Preparing...');
+  realLoading(function () { enterGame(); });
+});
+
+// ---- Helpers ----
+function stringToSeed(str) {
+  // Simple 32-bit string hash → integer
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  // Keep it within a reasonable positive range for our noise functions
+  return (h % 1000000000) + 1;
+}
+
+function resetWorldForNewSeed() {
+  // Clear chunks and meshes
+  for (const key of Object.keys(chunkMeshes)) {
+    const [cx, cz] = key.split(',').map(Number);
+    unloadChunkMesh(cx, cz);
+  }
+  chunks.clear();
+  modifiedChunks.clear();
+  // Reset queues if present
+  if (typeof chunkGenQueue !== 'undefined') { chunkGenQueue.length = 0; }
+  if (typeof chunkMeshQueue !== 'undefined') { chunkMeshQueue.length = 0; }
+  if (typeof chunkBuildQueue !== 'undefined') { chunkBuildQueue.length = 0; }
+  // Clear inventory & crafting
+  for (let i = 0; i < INV_SIZE; i++) inventory[i] = null;
+  for (let i = 0; i < 9; i++) craftGrid[i] = null;
+  selectedSlot = 0;
+  // Reset stats
+  health.hp = health.max;
+  health.dead = false;
+  hunger.value = hunger.max;
+  oxygen.value = oxygen.max;
+  // Reset day
+  dayT = 0.5;
+  // Force spawn re-pick next frame (surfaceHeight depends on seed)
+  // The actual spawn pick happens in player.pos setup — redo it here
+  pickSpawnForSeed();
+  // Reset chunk streaming markers so we regenerate from scratch
+  lastPlayerChunkX = -9999;
+  lastPlayerChunkZ = -9999;
+  // Clear any death overlay
+  if (deathEl) deathEl.style.display = 'none';
+  refreshHotbarUI();
+  renderHearts();
+}
+
+function pickSpawnForSeed() {
+  // Same logic as the initial spawn pick
+  for (let r = 0; r < 4000; r += 8) {
+    for (let a = 0; a < 32; a++) {
+      const ang = (a / 32) * Math.PI * 2;
+      const sx = Math.round(Math.cos(ang) * r);
+      const sz = Math.round(Math.sin(ang) * r);
+      const h = surfaceHeight(sx, sz);
+      if (h > SEA_LEVEL + 3) {
+        player.pos.x = sx;
+        player.pos.z = sz;
+        player.pos.y = h + 3;
+        return;
+      }
+    }
+  }
+  player.pos.y = surfaceHeight(0, 0) + 3;
+}
+
+// ============================================================
+// REAL LOADING — generates spawn chunks with progress
+// ============================================================
+// Async generator: for each step, yields to the browser so the
+// progress bar repaints. Then done() when everything is loaded.
+async function realLoading(done) {
+  const radius = (typeof gameState !== 'undefined') ? gameState.renderDistance : RENDER_DISTANCE;
+  const totalChunks = (radius * 2 + 1) * (radius * 2 + 1);
+
+  // Figure out the player's spawn chunk once, at the start.
+  const pcx = toChunkCoord(player.pos.x);
+  const pcz = toChunkCoord(player.pos.z);
+
+  // Build a nearest-first queue of chunks to generate.
+  const genQueue = [];
+  for (let dx = -radius; dx <= radius; dx++) {
+    for (let dz = -radius; dz <= radius; dz++) {
+      genQueue.push({ cx: pcx + dx, cz: pcz + dz, d: dx * dx + dz * dz });
+    }
+  }
+  genQueue.sort((a, b) => a.d - b.d);
+
+  // Phase 1: generate all chunks
+  const totalGen = genQueue.length;
+  for (let i = 0; i < totalGen; i++) {
+    const { cx, cz } = genQueue[i];
+    const key = chunkKey(cx, cz);
+    if (!chunks.has(key)) {
+      getChunk(cx, cz, true);   // heavy — worldgen
+    }
+    const pct = ((i + 1) / totalGen) * 0.85;   // first 85% of the bar
+    setLoadingProgress(pct, 'Generating terrain... ' + (i + 1) + ' / ' + totalGen);
+    // Yield to the browser so the bar paints
+    await new Promise(r => setTimeout(r, 0));
+  }
+
+  // Phase 2: mesh all chunks (nearest first)
+  const meshQueue = genQueue.slice();   // already sorted
+  const totalMesh = meshQueue.length;
+  for (let i = 0; i < totalMesh; i++) {
+    const { cx, cz } = meshQueue[i];
+    const key = chunkKey(cx, cz);
+    if (chunks.has(key) && !chunkMeshes[key]) {
+      rebuildChunk(cx, cz);            // heavy — meshing
+    }
+    const pct = 0.85 + ((i + 1) / totalMesh) * 0.15;   // last 15%
+    setLoadingProgress(pct, 'Building meshes... ' + (i + 1) + ' / ' + totalMesh);
+    await new Promise(r => setTimeout(r, 0));
+  }
+
+  // Ensure the next frame's updateChunkStreaming doesn't re-queue
+  // the chunks we just made.
+  lastPlayerChunkX = pcx;
+  lastPlayerChunkZ = pcz;
+
+  setLoadingProgress(1, 'Ready!');
+  await new Promise(r => setTimeout(r, 200));
+  done();
+}
+
+function enterGame() {
+  showScreen('playing');
+  // First-time hint on where to click
+  if (lockEl) {
+    lockEl.style.display = 'flex';
+    // Hide the game title from the old lock screen; keep just the hint
+    // (the lock screen becomes a simple click-to-play prompt)
+  }
+  safeRequestPointerLock();
+  // Force chunk streaming to run
+  lastPlayerChunkX = -9999;
+  lastPlayerChunkZ = -9999;
+}
+
 const pauseMenuEl    = document.getElementById('pause-menu');
 const settingsMenuEl = document.getElementById('settings-menu');
 const debugMenuEl    = document.getElementById('debug-menu');
@@ -7004,7 +7451,7 @@ function loop() {
     updateHeldItemMesh();
   }
 
-  if (!invOpen && !gamePaused && !health.dead) {
+  if (appState === 'playing' && !invOpen && !gamePaused && !health.dead) {
     updatePhysics(dt);
     updateHealth(dt);
     checkFallDamage();
@@ -7104,11 +7551,11 @@ function loop() {
 // ============================================================
 // STARTUP
 // ============================================================
-console.log('[MiniTerra 3D] streaming chunks...');
-updateChunkStreaming();
+console.log('[MiniTerra 3D] ready. Showing title screen.');
 refreshHotbarUI();
 updateHeldItemMesh();
-console.log('[MiniTerra 3D] ready. Render distance:', RENDER_DISTANCE, 'chunks');
+// Start on the title screen — the game world isn't generated yet.
+showScreen('title');
 loop();
 </script>
 </body>
