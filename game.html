@@ -20,7 +20,7 @@
   #lock h1 { margin: 0; font-size: 28px; }
   #lock p { margin: 0; font-size: 14px; color: #bbb; }
   #lock .hint { margin-top: 16px; font-size: 13px; color: #ffd54a; }
-    #info { position: fixed; top: 10px; left: 10px; color: #fff; font-size: 12px; text-shadow: 0 1px 2px #000; line-height: 1.5; z-index: 10; pointer-events: none; }
+  #info { position: fixed; top: 10px; left: 10px; color: #fff; font-size: 12px; text-shadow: 0 1px 2px #000; line-height: 1.5; z-index: 10; pointer-events: none; }
 
   /* Minecraft-style stat HUD */
   #stat-hud {
@@ -33,7 +33,7 @@
     gap: 2px;
     z-index: 9;
     pointer-events: none;
-    width: 540px;                /* wider so hearts and hunger spread apart */
+    width: 540px;
     box-sizing: border-box;
   }
   .stat-line {
@@ -42,13 +42,10 @@
     align-items: center;
     height: 20px;
     width: 100%;
+    position: relative;
   }
   .stat-line.right { justify-content: flex-end; }
-  .stat-group {
-    display: flex;
-    gap: 0;
-    line-height: 0;
-  }
+  .stat-group { display: flex; gap: 0; line-height: 0; }
   .stat-icon {
     width: 18px;
     height: 18px;
@@ -56,8 +53,6 @@
     image-rendering: pixelated;
     filter: drop-shadow(0 1px 0 rgba(0,0,0,.55));
   }
-  /* subtle dark backdrop strip behind each row so it reads on bright terrain */
-  .stat-line { position: relative; }
   .stat-line::before {
     content: '';
     position: absolute;
@@ -72,7 +67,7 @@
     75%     { transform: translateX(-50%) translateY(1px); }
   }
   #stat-hud.hurt { animation: statShake .18s linear 2; }
-    #state-icon {
+  #state-icon {
     position: fixed;
     left: 14px;
     bottom: 14px;
@@ -92,6 +87,139 @@
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
   }
 
+  /* ---------- Pause / Debug / Settings menus ---------- */
+  .menu-overlay {
+    position: fixed; inset: 0;
+    background: rgba(8,10,16,.72);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 30;
+    font-family: system-ui, sans-serif;
+    color: #fff;
+  }
+  .menu-overlay.open { display: flex; }
+  .menu-panel {
+    background: #2b2f3a;
+    border: 3px solid #555c6e;
+    border-radius: 12px;
+    padding: 26px 32px;
+    min-width: 320px;
+    max-width: 640px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.6);
+  }
+  .menu-panel h2 { margin: 0 0 18px 0; font-size: 22px; letter-spacing: 1px; text-align: center; }
+  .menu-btn {
+    display: block;
+    width: 100%;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    background: #3a3f4d;
+    color: #fff;
+    border: 2px solid #555c6e;
+    border-radius: 6px;
+    font: 15px system-ui, sans-serif;
+    text-align: left;
+    cursor: pointer;
+    transition: background .12s, border-color .12s;
+    box-sizing: border-box;
+  }
+  .menu-btn:hover { background: #4a5060; border-color: #7a8296; }
+  .menu-btn.danger { border-color: #7a3030; }
+  .menu-btn.danger:hover { background: #5a2020; }
+  .menu-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #3a3f4d;
+  }
+  .menu-row:last-child { border-bottom: none; }
+  .menu-row label { font-size: 14px; }
+  .menu-toggle {
+    width: 52px; height: 26px;
+    background: #3a3f4d;
+    border: 2px solid #555c6e;
+    border-radius: 13px;
+    position: relative;
+    cursor: pointer;
+    transition: background .12s;
+  }
+  .menu-toggle::after {
+    content: '';
+    position: absolute;
+    top: 1px; left: 1px;
+    width: 20px; height: 20px;
+    background: #888;
+    border-radius: 50%;
+    transition: transform .15s, background .15s;
+  }
+  .menu-toggle.on { background: #2e6b3a; border-color: #4a9a5a; }
+  .menu-toggle.on::after { transform: translateX(26px); background: #fff; }
+  .menu-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 180px; height: 6px;
+    background: #3a3f4d;
+    border-radius: 3px;
+    outline: none;
+  }
+  .menu-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px; height: 16px;
+    background: #ffd54a;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .menu-slider::-moz-range-thumb {
+    width: 16px; height: 16px;
+    background: #ffd54a;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+  }
+  .menu-value {
+    display: inline-block;
+    min-width: 44px;
+    text-align: right;
+    font-size: 13px;
+    color: #ffd54a;
+  }
+  .menu-hint {
+    font-size: 12px;
+    color: #888;
+    text-align: center;
+    margin-top: 14px;
+  }
+  #debug-hud {
+    position: fixed;
+    top: 10px; right: 10px;
+    color: #fff;
+    font: 12px/1.5 ui-monospace, Menlo, monospace;
+    text-shadow: 0 1px 2px #000;
+    background: rgba(0,0,0,.55);
+    padding: 8px 12px;
+    border-radius: 6px;
+    z-index: 12;
+    pointer-events: none;
+    display: none;
+    white-space: pre;
+  }
+  #debug-hud.show { display: block; }
+  #creative-badge {
+    position: fixed;
+    top: 10px; left: 50%;
+    transform: translateX(-50%);
+    color: #ffd54a;
+    font: bold 13px system-ui, sans-serif;
+    text-shadow: 0 1px 3px #000;
+    background: rgba(0,0,0,.5);
+    padding: 4px 12px;
+    border-radius: 4px;
+    z-index: 12;
+    display: none;
+    pointer-events: none;
+  }
+  #creative-badge.show { display: block; }
 </style>
 </head>
 <body>
@@ -102,8 +230,81 @@
 <div id="lock">
   <h1>MiniTerra 3D</h1>
   <p>Click to play</p>
-  <div class="hint">WASD move · Mouse look · Space jump · Shift sprint · L-click break · R-click place · 1-9 select · Esc release · E inventory · O save · P load · T texture preview</div>
+  <div class="hint">WASD move · Mouse look · Space jump · Shift sprint · L-click break · R-click place · 1-9 select · Esc pause · E inventory · O save · P load · T texture preview · F3 debug</div>
 </div>
+
+<!-- Pause Menu -->
+<div id="pause-menu" class="menu-overlay">
+  <div class="menu-panel">
+    <h2>Paused</h2>
+    <button class="menu-btn" data-action="resume">▶ Resume</button>
+    <button class="menu-btn" data-action="save">💾 Save Game</button>
+    <button class="menu-btn" data-action="load">📂 Load Game</button>
+    <button class="menu-btn" data-action="settings">⚙ Settings</button>
+    <button class="menu-btn" data-action="debug">🐞 Debug Menu</button>
+    <button class="menu-btn danger" data-action="quit">✖ Quit to Title</button>
+    <div class="menu-hint">Esc or P to resume</div>
+  </div>
+</div>
+
+<!-- Settings Menu -->
+<div id="settings-menu" class="menu-overlay">
+  <div class="menu-panel">
+    <h2>Settings</h2>
+    <div class="menu-row">
+      <label>Field of View</label>
+      <input type="range" class="menu-slider" id="set-fov" min="50" max="110" step="1" value="75">
+      <span class="menu-value" id="set-fov-val">75°</span>
+    </div>
+    <div class="menu-row">
+      <label>Mouse Sensitivity</label>
+      <input type="range" class="menu-slider" id="set-sens" min="1" max="20" step="1" value="10">
+      <span class="menu-value" id="set-sens-val">10</span>
+    </div>
+    <div class="menu-row">
+      <label>Render Distance</label>
+      <input type="range" class="menu-slider" id="set-render" min="2" max="8" step="1" value="3">
+      <span class="menu-value" id="set-render-val">3</span>
+    </div>
+    <div class="menu-row">
+      <label>Show Position HUD</label>
+      <div class="menu-toggle on" id="set-showpos"></div>
+    </div>
+    <button class="menu-btn" data-action="back" style="margin-top:18px;">◀ Back</button>
+  </div>
+</div>
+
+<!-- Debug Menu -->
+<div id="debug-menu" class="menu-overlay">
+  <div class="menu-panel">
+    <h2>Debug Menu</h2>
+    <div class="menu-row"><label>Creative Mode</label><div class="menu-toggle" id="dbg-creative"></div></div>
+    <div class="menu-row"><label>God Mode</label><div class="menu-toggle" id="dbg-god"></div></div>
+    <div class="menu-row"><label>Flight</label><div class="menu-toggle" id="dbg-flight"></div></div>
+    <div class="menu-row"><label>No-Clip</label><div class="menu-toggle" id="dbg-noclip"></div></div>
+    <div class="menu-row"><label>Instant Break</label><div class="menu-toggle on" id="dbg-instant"></div></div>
+    <div class="menu-row"><label>Always Day</label><div class="menu-toggle" id="dbg-day"></div></div>
+    <div class="menu-row"><label>Always Night</label><div class="menu-toggle" id="dbg-night"></div></div>
+    <div class="menu-row"><label>Show Debug HUD (F3)</label><div class="menu-toggle" id="dbg-hud"></div></div>
+    <div class="menu-row">
+      <label>Time of Day</label>
+      <input type="range" class="menu-slider" id="dbg-time" min="0" max="100" step="1" value="50">
+      <span class="menu-value" id="dbg-time-val">0.50</span>
+    </div>
+    <div class="menu-row">
+      <label>Speed Multiplier</label>
+      <input type="range" class="menu-slider" id="dbg-speed" min="1" max="5" step="1" value="1">
+      <span class="menu-value" id="dbg-speed-val">1×</span>
+    </div>
+    <button class="menu-btn" data-action="back" style="margin-top:18px;">◀ Back</button>
+  </div>
+</div>
+
+<!-- Debug HUD (F3) -->
+<div id="debug-hud"></div>
+
+<!-- Creative Mode badge -->
+<div id="creative-badge">CREATIVE MODE</div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
 <script>
@@ -114,18 +315,17 @@
 const CHUNK_SIZE = 16;
 const WORLD_H = 64;
 const SEA_LEVEL = 20;
-const RENDER_DISTANCE = 3;   // chunks (radius)
-const UNLOAD_MARGIN = 2;     // extra chunks of slack before unloading
+const RENDER_DISTANCE = 3;
+const UNLOAD_MARGIN = 2;
 const INV_SIZE = 45;
 const HOTBAR_SIZE = 9;
 const STACK_MAX = 100;
 
 // ============================================================
-// BLOCKS — all block types
+// BLOCKS
 // ============================================================
 const BLOCKS = {
   0:  { name: 'air', solid: false },
-  // Base
   1:  { name: 'grass', color: 0x6ab150 },
   2:  { name: 'dirt',  color: 0x8a5a3a },
   3:  { name: 'stone', color: 0x808080 },
@@ -135,22 +335,18 @@ const BLOCKS = {
   7:  { name: 'glass', color: 0xa8d8e8, transparent: true },
   8:  { name: 'brick', color: 0xa5423a },
   9:  { name: 'gold',  color: 0xffd700 },
-  // Batch 2
   10: { name: 'leaves', color: 0x3a8030, transparent: true },
   11: { name: 'water',  color: 0x3a7ad0, transparent: true, solid: false },
   12: { name: 'snow',   color: 0xf0f4ff },
   13: { name: 'ice',    color: 0xa8d8f0, transparent: true },
   14: { name: 'metal',  color: 0xb0b0c0 },
   15: { name: 'cobble', color: 0x707070 },
-  // Batch 5 (ores)
   16: { name: 'coal_ore',    color: 0x333333, hardness: 3, minTier: 'wood' },
   17: { name: 'iron_ore',    color: 0xc09070, hardness: 5, minTier: 'stone' },
   18: { name: 'gold_ore',    color: 0xffd700, hardness: 7, minTier: 'iron' },
   19: { name: 'diamond_ore', color: 0x40e0ff, hardness: 9, minTier: 'iron' },
-  // Batch 6b
   20: { name: 'bed_block',   color: 0xa03030, hardness: 1 },
   21: { name: 'torch_block', color: 0xffb300, hardness: 0.1, solid: false },
-  // --- Wood types (batch 7) ---
   22: { name: 'birch_log',    color: 0xd8d0b8 },
   23: { name: 'birch_planks', color: 0xd0c098 },
   24: { name: 'birch_leaves', color: 0xa8d080, transparent: true },
@@ -165,7 +361,6 @@ const BLOCKS = {
   33: { name: 'dark_leaves',  color: 0x2a5020, transparent: true },
 };
 
-// Block hardness (mining time)
 const HARDNESS = {
   1:0.4, 2:0.4, 3:3.0, 4:1.5, 5:1.5, 6:0.3, 7:0.2, 8:2.5, 9:2.5,
   10:0.3, 11:0.0, 12:0.3, 13:0.6, 14:4.0, 15:2.5,
@@ -175,14 +370,10 @@ const HARDNESS = {
 };
 for (const id in HARDNESS) if (BLOCKS[id]) BLOCKS[id].hardness = HARDNESS[id];
 
-const HOTBAR = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-let selected = 0;
-
 // ============================================================
-// ITEMS — all inventory items
+// ITEMS
 // ============================================================
 const ITEMS = {
-  // Mob drops (batch 3, 5, 6a)
   raw_porkchop: { name: 'Raw Porkchop', color: 0xffb8b8 },
   feather:      { name: 'Feather',      color: 0xf4f4f4 },
   raw_chicken:  { name: 'Raw Chicken',  color: 0xffe8b8 },
@@ -195,7 +386,6 @@ const ITEMS = {
   gunpowder:    { name: 'Gunpowder',    color: 0x555555 },
   slimeball:    { name: 'Slimeball',    color: 0x7ec87e },
   bat_wing:     { name: 'Bat Wing',     color: 0x5a4a6a },
-  // Materials (batch 5)
   stick:   { name: 'Stick',        color: 0x8a5a3a },
   coal:    { name: 'Coal',         color: 0x222222 },
   iron:    { name: 'Iron Ingot',   color: 0xd9a679 },
@@ -205,7 +395,6 @@ const ITEMS = {
   gold_block:    { name: 'Gold Block',    color: 0xffd700 },
   diamond_block: { name: 'Diamond Block', color: 0x40e0ff },
   wool: { name: 'Wool', color: 0xf0f0f0 },
-  // Tools (batch 5)
   wood_pickaxe:  { name: 'Wood Pickaxe',  color: 0x8a5a3a, tier: 'wood',  tool: 'pickaxe', speed: 2, damage: 2 },
   stone_pickaxe: { name: 'Stone Pickaxe', color: 0x808080, tier: 'stone', tool: 'pickaxe', speed: 4, damage: 3 },
   iron_pickaxe:  { name: 'Iron Pickaxe',  color: 0xd9a679, tier: 'iron',  tool: 'pickaxe', speed: 6, damage: 4 },
@@ -215,10 +404,8 @@ const ITEMS = {
   wood_sword:  { name: 'Wood Sword',  color: 0x8a5a3a, tier: 'wood',  tool: 'sword', damage: 4 },
   stone_sword: { name: 'Stone Sword', color: 0x808080, tier: 'stone', tool: 'sword', damage: 5 },
   iron_sword:  { name: 'Iron Sword',  color: 0xd9a679, tier: 'iron',  tool: 'sword', damage: 7 },
-  // Utility
   bed:   { name: 'Bed',   color: 0xa03030 },
   torch: { name: 'Torch', color: 0xffb300 },
-  // Wood types
   birch_log:    { name: 'Birch Log',    color: 0xd8d0b8 },
   birch_planks: { name: 'Birch Planks', color: 0xd0c098 },
   pine_log:     { name: 'Pine Log',     color: 0x5a3a20 },
@@ -253,7 +440,6 @@ const RECIPES = [
   { grid: ['gold_block',null,null,null,null,null,null,null,null], out: 'gold', count: 9, id: 'gold_from_block' },
   { grid: ['diamond_block',null,null,null,null,null,null,null,null], out: 'diamond', count: 9, id: 'diamond_from_block' },
   { grid: ['planks',null,null,null,null,null,null,null,null], out: 'wood', count: 1, id: 'planks_to_wood' },
-  // Wood type recipes
   { grid: ['birch_log',null,null,null,null,null,null,null,null],    out: 'birch_planks',  count: 4, id: 'birch_planks' },
   { grid: ['pine_log',null,null,null,null,null,null,null,null],     out: 'pine_planks',   count: 4, id: 'pine_planks' },
   { grid: ['cherry_log',null,null,null,null,null,null,null,null],   out: 'cherry_planks', count: 4, id: 'cherry_planks' },
@@ -261,10 +447,9 @@ const RECIPES = [
 ];
 
 // ============================================================
-// MOBS — all mob definitions
+// MOBS
 // ============================================================
 const MOBS = {
-  // Batch 3
   pig: { name: 'Pig', hp: 10, speed: 0.05, size: { w: 0.9, h: 0.9, d: 1.3 },
     passive: true, spawnLight: 'day', spawnSurface: true,
     drops: [{ item: 'raw_porkchop', min: 1, max: 2 }],
@@ -277,7 +462,6 @@ const MOBS = {
     hostile: true, damage: 3, spawnLight: 'dark', spawnSurface: false,
     drops: [{ item: 'rotten_flesh', min: 1, max: 2 }],
     bodyColor: 0x3a6b3a, headColor: 0x4a8a4a, legColor: 0x2a4a2a, model: 'zombie' },
-  // Batch 6a
   sheep: { name: 'Sheep', hp: 8, speed: 0.05, size: { w: 0.9, h: 1.1, d: 1.2 },
     passive: true, spawnLight: 'any', spawnSurface: true,
     drops: [{ item: 'raw_mutton', min: 1, max: 2 }, { item: 'wool', min: 1, max: 2 }],
@@ -299,7 +483,6 @@ const MOBS = {
     passive: true, flies: true, erratic: true, spawnLight: 'dark', spawnSurface: false,
     drops: [{ item: 'bat_wing', min: 0, max: 1 }],
     bodyColor: 0x3a2a2a, headColor: 0x3a2a2a, legColor: 0x3a2a2a, model: 'bat' },
-      // ---- New land animals ----
   fox: { name: 'Fox', hp: 8, speed: 0.07, size: { w: 0.6, h: 0.6, d: 1.0 },
     passive: true, spawnLight: 'any', spawnSurface: true,
     drops: [{ item: 'leather', min: 0, max: 1 }, { item: 'bone', min: 0, max: 1 }],
@@ -312,8 +495,6 @@ const MOBS = {
     passive: true, spawnLight: 'any', spawnSurface: true,
     drops: [{ item: 'raw_mutton', min: 0, max: 1 }],
     bodyColor: 0xe8d8c0, headColor: 0xf0e0d0, legColor: 0xd0b8a0, model: 'rabbit' },
-
-  // ---- Air animals ----
   parrot: { name: 'Parrot', hp: 6, speed: 0.09, size: { w: 0.4, h: 0.4, d: 0.5 },
     passive: true, flies: true, erratic: true, spawnLight: 'day', spawnSurface: true,
     drops: [{ item: 'feather', min: 1, max: 3 }],
@@ -324,8 +505,6 @@ const MOBS = {
     spawnLight: 'dark', spawnSurface: false,
     drops: [{ item: 'leather', min: 1, max: 2 }, { item: 'bone', min: 0, max: 2 }],
     bodyColor: 0x8a2028, headColor: 0xa03038, legColor: 0x601818, model: 'dragon' },
-
-  // ---- Sea animals ----
   fish: { name: 'Fish', hp: 3, speed: 0.10, size: { w: 0.4, h: 0.3, d: 0.6 },
     passive: true, swims: true, spawnLight: 'any', spawnWater: true,
     drops: [{ item: 'raw_chicken', min: 1, max: 1 }],
@@ -337,10 +516,10 @@ const MOBS = {
 };
 
 // ============================================================
-// WORLD DATA — infinite chunked storage
+// WORLD DATA
 // ============================================================
-const chunks = new Map();             // "cx,cz" -> { data: Uint8Array, dirty: bool }
-const modifiedChunks = new Set();     // chunk keys the player has modified
+const chunks = new Map();
+const modifiedChunks = new Set();
 
 function chunkKey(cx, cz) { return cx + ',' + cz; }
 function toChunkCoord(n) { return Math.floor(n / CHUNK_SIZE); }
@@ -383,11 +562,19 @@ function setBlock(x, y, z, v) {
 // NOISE
 // ============================================================
 let seed = Math.floor(Math.random() * 10000);
+
 function hash2(x, y) {
   let h = Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263) + Math.imul(seed, 1274126177);
   h = Math.imul(h ^ (h >>> 13), 1274126177);
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 }
+function hash3(x, y, z) {
+  let h = Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263) + Math.imul(z | 0, 2246822519) + Math.imul(seed, 1274126177);
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  h = Math.imul(h ^ (h >>> 16), 2246822519);
+  return ((h ^ (h >>> 15)) >>> 0) / 4294967296;
+}
+
 function vnoise(x, y) {
   const xi = Math.floor(x), yi = Math.floor(y);
   const s = t => t * t * (3 - 2 * t);
@@ -395,21 +582,83 @@ function vnoise(x, y) {
   const a = hash2(xi, yi), b = hash2(xi + 1, yi), c = hash2(xi, yi + 1), d = hash2(xi + 1, yi + 1);
   return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
 }
+
+function vnoise3(x, y, z) {
+  const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
+  const s = t => t * t * (3 - 2 * t);
+  const u = s(x - xi), v = s(y - yi), w = s(z - zi);
+  const c000 = hash3(xi,   yi,   zi  );
+  const c100 = hash3(xi+1, yi,   zi  );
+  const c010 = hash3(xi,   yi+1, zi  );
+  const c110 = hash3(xi+1, yi+1, zi  );
+  const c001 = hash3(xi,   yi,   zi+1);
+  const c101 = hash3(xi+1, yi,   zi+1);
+  const c011 = hash3(xi,   yi+1, zi+1);
+  const c111 = hash3(xi+1, yi+1, zi+1);
+  const x00 = c000 * (1 - u) + c100 * u;
+  const x10 = c010 * (1 - u) + c110 * u;
+  const x01 = c001 * (1 - u) + c101 * u;
+  const x11 = c011 * (1 - u) + c111 * u;
+  const y0 = x00 * (1 - v) + x10 * v;
+  const y1 = x01 * (1 - v) + x11 * v;
+  return y0 * (1 - w) + y1 * w;
+}
+
 function fbm(x, y) {
   return vnoise(x, y) * 0.6 + vnoise(x * 2.1, y * 2.1) * 0.3 + vnoise(x * 4.3, y * 4.3) * 0.1;
+}
+
+function fbm3(x, y, z, octaves) {
+  let total = 0, amp = 1, freq = 1, norm = 0;
+  const oct = octaves || 3;
+  for (let i = 0; i < oct; i++) {
+    total += vnoise3(x * freq, y * freq, z * freq) * amp;
+    norm += amp;
+    amp *= 0.5;
+    freq *= 2.0;
+  }
+  return total / norm;
+}
+
+// Ridged noise for mountains (peaks at 1, valleys near 0)
+function ridged(x, y) {
+  let n = 0, amp = 1, freq = 1, norm = 0;
+  for (let i = 0; i < 4; i++) {
+    const v = 1 - Math.abs(vnoise(x * freq, y * freq) * 2 - 1);
+    n += v * v * amp;
+    norm += amp;
+    amp *= 0.5;
+    freq *= 2.0;
+  }
+  return n / norm;
 }
 
 // ============================================================
 // TERRAIN GENERATION
 // ============================================================
+function mountainMask(x, z) {
+  const m = fbm(x * 0.0035 + 500, z * 0.0035 + 500);
+  return Math.max(0, Math.min(1, (m - 0.5) * 5));
+}
+
 function surfaceHeight(x, z) {
-  const n = fbm(x * 0.02, z * 0.02);
+  const n     = fbm(x * 0.02,  z * 0.02);
   const hills = fbm(x * 0.008 + 100, z * 0.008 + 100);
-  return Math.floor(SEA_LEVEL + (n - 0.5) * 6 + (hills - 0.5) * 10);
+  const base  = SEA_LEVEL + (n - 0.5) * 6 + (hills - 0.5) * 10;
+
+  const mask = mountainMask(x, z);
+  let mountainLift = 0;
+  if (mask > 0) {
+    const ridge = ridged(x * 0.012 + 200, z * 0.012 + 200);
+    mountainLift = Math.pow(ridge, 1.6) * mask * mask * 45;
+    mountainLift += mask * 6;
+  }
+
+  return Math.floor(base + mountainLift);
 }
 
 // ============================================================
-// TREES — species definitions
+// TREES
 // ============================================================
 const TREE_SPECIES = {
   oak:    { name: 'Oak',     weight: 35, trunkMin: 4,  trunkMax: 6,  radius: 2, layers: 3, log: 4,  leaves: 10, planks: 5 },
@@ -433,11 +682,83 @@ function pickSpecies(rand) {
   return TREE_SPECIES_LIST[0];
 }
 
+// ============================================================
+// CAVES + RAVINES
+// ============================================================
+function isCaveAt(x, y, z) {
+  if (y < 4 || y > WORLD_H - 4) return false;
+  const surf = surfaceHeight(x, z);
+  if (y > surf - 2) return false;
+
+  // Noodle caves — thin winding tunnels from two 3D noise fields
+  const scale = 0.045;
+  const n1 = fbm3(x * scale, y * scale * 1.4, z * scale, 3);
+  const n2 = fbm3((x + 1000) * scale, y * scale * 1.4, (z + 1000) * scale, 3);
+  const d1 = Math.abs(n1 - 0.5);
+  const d2 = Math.abs(n2 - 0.5);
+  if (d1 < 0.035 && d2 < 0.035) return true;
+
+  // Cheese caves — larger blobby voids
+  const cheese = fbm3(x * 0.018 + 200, y * 0.025, z * 0.018 + 200, 3);
+  if (cheese > 0.72) return true;
+
+  return false;
+}
+
+function isRavineAt(x, y, z) {
+  if (y < 8 || y > WORLD_H - 4) return false;
+  const pcx = toChunkCoord(x);
+  const pcz = toChunkCoord(z);
+  for (let ox = -2; ox <= 2; ox++) {
+    for (let oz = -2; oz <= 2; oz++) {
+      const cx = pcx + ox;
+      const cz = pcz + oz;
+      const r0 = hash2(cx * 31 + 7, cz * 47 + 13);
+      if (r0 > 0.033) continue;
+
+      const startX = cx * CHUNK_SIZE + hash2(cx * 11 + 1, cz * 5 + 2) * CHUNK_SIZE;
+      const startZ = cz * CHUNK_SIZE + hash2(cx * 7 + 3, cz * 17 + 4) * CHUNK_SIZE;
+      const dirAngle = hash2(cx * 23 + 9, cz * 3 + 11) * Math.PI * 2;
+      const length = 60 + hash2(cx * 5 + 21, cz * 13 + 3) * 80;
+      const width = 2.5 + hash2(cx * 19 + 5, cz * 29 + 7) * 2.5;
+      const depth = 22 + hash2(cx * 3 + 27, cz * 11 + 5) * 18;
+
+      const dx = x - startX;
+      const dz = z - startZ;
+      const along = dx * Math.cos(dirAngle) + dz * Math.sin(dirAngle);
+      const across = -dx * Math.sin(dirAngle) + dz * Math.cos(dirAngle);
+      if (along < 0 || along > length) continue;
+
+      const w = width * (1 - (along / length) * 0.3);
+      const perp = Math.abs(across);
+      if (perp > w) continue;
+
+      const surfY = surfaceHeight(
+        Math.floor(startX + Math.cos(dirAngle) * along),
+        Math.floor(startZ + Math.sin(dirAngle) * along)
+      );
+      const endTaper = Math.min(1, along / 12) * Math.min(1, (length - along) / 12);
+      const topY = surfY + 1;
+      const bottomY = Math.max(8, surfY - depth * endTaper);
+
+      if (y >= bottomY && y <= topY) {
+        const yT = (y - bottomY) / Math.max(1, topY - bottomY);
+        const widthHere = w * (0.4 + 0.6 * yT);
+        if (perp < widthHere) return true;
+      }
+    }
+  }
+  return false;
+}
+
+// ============================================================
+// CHUNK GENERATION
+// ============================================================
 function generateChunk(cx, cz, data) {
   const baseX = cx * CHUNK_SIZE;
   const baseZ = cz * CHUNK_SIZE;
 
-  // ---- 1) Terrain ----
+  // ---- 1) Terrain (with mountains) ----
   for (let lx = 0; lx < CHUNK_SIZE; lx++) {
     for (let lz = 0; lz < CHUNK_SIZE; lz++) {
       const wx = baseX + lx;
@@ -448,7 +769,11 @@ function generateChunk(cx, cz, data) {
         if (y === 0) b = 3;
         else if (y < h - 4) b = 3;
         else if (y < h) b = 2;
-        else if (y === h) b = h <= SEA_LEVEL ? 6 : 1;
+        else if (y === h) {
+          if (h <= SEA_LEVEL) b = 6;
+          else if (h > SEA_LEVEL + 32) b = 3;
+          else b = 1;
+        }
         data[localIdx(lx, y, lz)] = b;
       }
     }
@@ -464,10 +789,38 @@ function generateChunk(cx, cz, data) {
     }
   }
 
-  // ---- 3) Ores ----
+  // ---- 3) Caves ----
+  for (let lx = 0; lx < CHUNK_SIZE; lx++) {
+    for (let lz = 0; lz < CHUNK_SIZE; lz++) {
+      const wx = baseX + lx;
+      const wz = baseZ + lz;
+      for (let y = 1; y < WORLD_H - 1; y++) {
+        const i = localIdx(lx, y, lz);
+        const b = data[i];
+        if (b === 0 || b === 11) continue;
+        if (isCaveAt(wx, y, wz)) data[i] = 0;
+      }
+    }
+  }
+
+  // ---- 4) Ravines ----
+  for (let lx = 0; lx < CHUNK_SIZE; lx++) {
+    for (let lz = 0; lz < CHUNK_SIZE; lz++) {
+      const wx = baseX + lx;
+      const wz = baseZ + lz;
+      for (let y = 1; y < WORLD_H - 1; y++) {
+        const i = localIdx(lx, y, lz);
+        const b = data[i];
+        if (b === 0 || b === 11) continue;
+        if (isRavineAt(wx, y, wz)) data[i] = 0;
+      }
+    }
+  }
+
+  // ---- 5) Ores ----
   scatterOresInChunk(cx, cz, data);
 
-  // ---- 4) Trees ----
+  // ---- 6) Trees ----
   placeTreesInChunk(cx, cz, data);
 }
 
@@ -503,7 +856,6 @@ function placeTreesInChunk(cx, cz, data) {
   const baseX = cx * CHUNK_SIZE;
   const baseZ = cz * CHUNK_SIZE;
 
-  // Scan a padded area so trees whose trunks are outside still write leaves in
   const pad = 8;
   const minCellX = Math.floor((baseX - pad) / 6) * 6;
   const maxCellX = baseX + CHUNK_SIZE + pad;
@@ -519,6 +871,7 @@ function placeTreesInChunk(cx, cz, data) {
       const tz = gz + oz;
       const th = surfaceHeight(tx, tz);
       if (th <= SEA_LEVEL) continue;
+      if (th > SEA_LEVEL + 32) continue;   // no trees on rocky peaks
       const sp = pickSpecies(hash2(tx * 97 + 3, tz * 61 + 19));
       plantTreeIntoChunk(sp, tx, th + 1, tz, cx, cz, data);
     }
@@ -548,10 +901,8 @@ function plantTreeIntoChunk(sp, cx0, groundY, cz0, cx, cz, data) {
     data[i] = id;
   }
 
-  // Trunk
   for (let i = 0; i < trunkH; i++) writeCell(cx0, groundY + i, cz0, sp.log, false);
 
-  // Canopy
   const canopyTopY = groundY + trunkH - 1;
   const canopyBottomY = canopyTopY - Math.floor(sp.layers / 2);
 
@@ -567,7 +918,6 @@ function plantTreeIntoChunk(sp, cx0, groundY, cz0, cx, cz, data) {
     }
   }
 
-  // Top cap
   const topY = canopyBottomY + sp.layers;
   const capRad = Math.max(0, R - 1);
   for (let dx = -capRad; dx <= capRad; dx++) {
@@ -582,7 +932,7 @@ function plantTreeIntoChunk(sp, cx0, groundY, cz0, cx, cz, data) {
 }
 
 // ============================================================
-// BLOCK TEXTURES — one 16x16 tile per block, in an atlas
+// BLOCK TEXTURES — atlas
 // ============================================================
 const TILE_SIZE = 16;
 const TILES_PER_ROW = 8;
@@ -804,7 +1154,6 @@ function drawTorch(id) {
   }
 }
 
-// ---------- Wood type textures ----------
 function drawBirchLog(id) {
   const { x, y } = tileOrigin(id);
   for (let i = 0; i < 16; i++) for (let j = 0; j < 16; j++) {
@@ -821,9 +1170,7 @@ function drawBirchPlanks(id) {
     const n = tr(i, j, id);
     let r = 210 + (n - 0.5) * 20, g = 195 + (n - 0.5) * 20, b = 160 + (n - 0.5) * 20;
     if (j === 0 || j === 5 || j === 10 || j === 15) { r -= 30; g -= 25; b -= 20; }
-    if ((i === 8 && j < 5) || (i === 3 && j > 5 && j < 10) || (i === 12 && j > 10)) {
-      r -= 25; g -= 20; b -= 15;
-    }
+    if ((i === 8 && j < 5) || (i === 3 && j > 5 && j < 10) || (i === 12 && j > 10)) { r -= 25; g -= 20; b -= 15; }
     px(x, y, i, j, r, g, b);
   }
 }
@@ -852,9 +1199,7 @@ function drawPinePlanks(id) {
     const n = tr(i, j, id);
     let r = 140 + (n - 0.5) * 20, g = 90 + (n - 0.5) * 15, b = 50 + (n - 0.5) * 15;
     if (j === 0 || j === 5 || j === 10 || j === 15) { r -= 30; g -= 25; b -= 20; }
-    if ((i === 8 && j < 5) || (i === 3 && j > 5 && j < 10) || (i === 12 && j > 10)) {
-      r -= 25; g -= 20; b -= 15;
-    }
+    if ((i === 8 && j < 5) || (i === 3 && j > 5 && j < 10) || (i === 12 && j > 10)) { r -= 25; g -= 20; b -= 15; }
     px(x, y, i, j, r, g, b);
   }
 }
@@ -882,9 +1227,7 @@ function drawCherryPlanks(id) {
     const n = tr(i, j, id);
     let r = 210 + (n - 0.5) * 20, g = 140 + (n - 0.5) * 20, b = 155 + (n - 0.5) * 20;
     if (j === 0 || j === 5 || j === 10 || j === 15) { r -= 30; g -= 25; b -= 20; }
-    if ((i === 8 && j < 5) || (i === 3 && j > 5 && j < 10) || (i === 12 && j > 10)) {
-      r -= 25; g -= 20; b -= 15;
-    }
+    if ((i === 8 && j < 5) || (i === 3 && j > 5 && j < 10) || (i === 12 && j > 10)) { r -= 25; g -= 20; b -= 15; }
     px(x, y, i, j, r, g, b);
   }
 }
@@ -913,9 +1256,7 @@ function drawDarkPlanks(id) {
     const n = tr(i, j, id);
     let r = 90 + (n - 0.5) * 15, g = 55 + (n - 0.5) * 12, b = 32 + (n - 0.5) * 10;
     if (j === 0 || j === 5 || j === 10 || j === 15) { r -= 25; g -= 20; b -= 15; }
-    if ((i === 8 && j < 5) || (i === 3 && j > 5 && j < 10) || (i === 12 && j > 10)) {
-      r -= 20; g -= 15; b -= 10;
-    }
+    if ((i === 8 && j < 5) || (i === 3 && j > 5 && j < 10) || (i === 12 && j > 10)) { r -= 20; g -= 15; b -= 10; }
     px(x, y, i, j, r, g, b);
   }
 }
@@ -929,7 +1270,6 @@ function drawDarkLeaves(id) {
   }
 }
 
-// Draw the atlas
 (function buildAtlas() {
   actx.fillStyle = '#ff00ff';
   actx.fillRect(0, 0, ATLAS_W, ATLAS_H);
@@ -970,18 +1310,14 @@ function uvForBlock(id) {
   };
 }
 
-// END OF PART 1
-
 // ============================================================
 // SCENE, CAMERA, RENDERER
 // ============================================================
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
 
-// Fog range: near = where it starts to blend, far = where it's fully opaque
-// RENDER_DISTANCE * CHUNK_SIZE = how far chunks render (16*6 = 96 blocks)
-const FOG_NEAR = 0.55 * RENDER_DISTANCE * CHUNK_SIZE;   // 55% of render distance
-const FOG_FAR  = 0.95 * RENDER_DISTANCE * CHUNK_SIZE;   // 95% of render distance
+const FOG_NEAR = 0.55 * RENDER_DISTANCE * CHUNK_SIZE;
+const FOG_FAR  = 0.95 * RENDER_DISTANCE * CHUNK_SIZE;
 scene.fog = new THREE.Fog(0x87ceeb, FOG_NEAR, FOG_FAR);
 
 const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.05, 500);
@@ -989,8 +1325,22 @@ const renderer = new THREE.WebGLRenderer({ antialias: false });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFShadowMap;   // cheaper than PCFSoft
+renderer.shadowMap.type = THREE.PCFShadowMap;
 document.body.appendChild(renderer.domElement);
+
+// Safe pointer-lock wrapper — swallows WrongDocumentError etc.
+function safeRequestPointerLock() {
+  if (!renderer || !renderer.domElement) return;
+  if (typeof gamePaused !== 'undefined' && gamePaused) return;
+  if (typeof invOpen !== 'undefined' && invOpen) return;
+  if (typeof health !== 'undefined' && health.dead) return;
+  if (document.pointerLockElement === renderer.domElement) return;
+  if (!document.body.contains(renderer.domElement)) return;
+  try {
+    const p = renderer.domElement.requestPointerLock();
+    if (p && typeof p.catch === 'function') p.catch(function () {});
+  } catch (e) {}
+}
 
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
@@ -1001,39 +1351,34 @@ addEventListener('resize', () => {
 });
 
 // ============================================================
-// HELD ITEM (like Minecraft first-person hand)
+// HELD ITEM (first-person hand)
 // ============================================================
 const handScene = new THREE.Scene();
 const handCamera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.01, 10);
 handCamera.position.set(0, 0, 0);
 
-// Full-screen warm light so the hand doesn't go black
 const handLight = new THREE.DirectionalLight(0xffffff, 1.0);
 handLight.position.set(1, 1, 1);
 handScene.add(handLight);
 handScene.add(new THREE.AmbientLight(0xffffff, 0.6));
 
-// Group holding the arm + item
 const handGroup = new THREE.Group();
 handScene.add(handGroup);
 
-// The arm (a simple skin-colored box angled into view)
 const armMat = new THREE.MeshLambertMaterial({ color: 0xd8a878 });
 const armMesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.7), armMat);
 armMesh.position.set(0.35, -0.28, -0.55);
 armMesh.rotation.set(-0.15, -0.25, 0.1);
 handGroup.add(armMesh);
 
-// The item slot — we'll swap the mesh here when the player changes hotbar
 const heldItemHolder = new THREE.Group();
-heldItemHolder.position.set(0.30, -0.20, -0.82);   // raised + slightly forward onto the palm
-heldItemHolder.rotation.set(0.35, -0.2, 0);         // tilt down-forward so the item "sits" in the hand
+heldItemHolder.position.set(0.30, -0.20, -0.82);
+heldItemHolder.rotation.set(0.35, -0.2, 0);
 handGroup.add(heldItemHolder);
 
 // ============================================================
-// IMPROVED ITEM MODELS
+// ITEM MODELS
 // ============================================================
-
 function blob(color, rx, ry, rz, opacity) {
   const mat = new THREE.MeshLambertMaterial({ color: color });
   if (opacity !== undefined) { mat.transparent = true; mat.opacity = opacity; }
@@ -1041,7 +1386,6 @@ function blob(color, rx, ry, rz, opacity) {
   geo.scale(rx, ry, rz);
   return new THREE.Mesh(geo, mat);
 }
-
 function capsule(color, radius, length, segments) {
   const g = new THREE.Group();
   const mat = new THREE.MeshLambertMaterial({ color: color });
@@ -1055,7 +1399,6 @@ function capsule(color, radius, length, segments) {
   g.add(capBot);
   return g;
 }
-
 function makeMeatModel(baseColor, fatColor, hasBone) {
   const g = new THREE.Group();
   const meat = blob(baseColor, 0.13, 0.06, 0.09);
@@ -1073,7 +1416,6 @@ function makeMeatModel(baseColor, fatColor, hasBone) {
   }
   return g;
 }
-
 function makeChickenModel() {
   const g = new THREE.Group();
   const meat = blob(0xffe8b8, 0.09, 0.07, 0.11);
@@ -1087,43 +1429,28 @@ function makeChickenModel() {
   g.add(crisp);
   return g;
 }
-
 function makeRottenFleshModel() {
   const g = new THREE.Group();
   const base = blob(0x8a6f5a, 0.12, 0.07, 0.1);
   g.add(base);
   for (let i = 0; i < 4; i++) {
     const lump = blob(0x6a5040, 0.04, 0.03, 0.04);
-    lump.position.set(
-      (Math.random() - 0.5) * 0.14,
-      (Math.random() - 0.5) * 0.08,
-      (Math.random() - 0.5) * 0.12
-    );
+    lump.position.set((Math.random() - 0.5) * 0.14, (Math.random() - 0.5) * 0.08, (Math.random() - 0.5) * 0.12);
     g.add(lump);
   }
   return g;
 }
-
 function makeCoalModel() {
   const g = new THREE.Group();
-  const base = blob(0x1a1a1a, 0.1, 0.09, 0.1);
-  g.add(base);
+  g.add(blob(0x1a1a1a, 0.1, 0.09, 0.1));
   for (let i = 0; i < 5; i++) {
-    const facet = new THREE.Mesh(
-      new THREE.TetrahedronGeometry(0.05),
-      new THREE.MeshLambertMaterial({ color: 0x333333 })
-    );
-    facet.position.set(
-      (Math.random() - 0.5) * 0.14,
-      (Math.random() - 0.5) * 0.12,
-      (Math.random() - 0.5) * 0.14
-    );
+    const facet = new THREE.Mesh(new THREE.TetrahedronGeometry(0.05), new THREE.MeshLambertMaterial({ color: 0x333333 }));
+    facet.position.set((Math.random() - 0.5) * 0.14, (Math.random() - 0.5) * 0.12, (Math.random() - 0.5) * 0.14);
     facet.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3);
     g.add(facet);
   }
   return g;
 }
-
 function makeIngotModel(color) {
   const g = new THREE.Group();
   const mat = new THREE.MeshLambertMaterial({ color: color });
@@ -1142,7 +1469,6 @@ function makeIngotModel(color) {
   g.add(top);
   return g;
 }
-
 function makeDiamondModel() {
   const g = new THREE.Group();
   const mat = new THREE.MeshLambertMaterial({ color: 0x40e0ff, flatShading: true });
@@ -1153,15 +1479,11 @@ function makeDiamondModel() {
   bottom.position.y = -0.04;
   bottom.rotation.x = Math.PI;
   g.add(bottom);
-  const spark = new THREE.Mesh(
-    new THREE.SphereGeometry(0.03, 4, 3),
-    new THREE.MeshBasicMaterial({ color: 0xffffff })
-  );
+  const spark = new THREE.Mesh(new THREE.SphereGeometry(0.03, 4, 3), new THREE.MeshBasicMaterial({ color: 0xffffff }));
   spark.position.set(0.04, 0.06, 0.04);
   g.add(spark);
   return g;
 }
-
 function makeFeatherModel() {
   const g = new THREE.Group();
   const shaftMat = new THREE.MeshLambertMaterial({ color: 0x8a5a3a });
@@ -1179,35 +1501,29 @@ function makeFeatherModel() {
   g.add(vane2);
   return g;
 }
-
 function makeBoneModel() {
   const g = new THREE.Group();
   const mat = new THREE.MeshLambertMaterial({ color: 0xf0f0e0 });
   const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.4, 6), mat);
   shaft.rotation.z = Math.PI / 2;
   g.add(shaft);
-  for (const x of [-0.22, 0.22]) {
-    for (const y of [-0.05, 0.05]) {
-      const ball = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 5), mat);
-      ball.position.set(x, y, 0);
-      g.add(ball);
-    }
+  for (const x of [-0.22, 0.22]) for (const y of [-0.05, 0.05]) {
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 5), mat);
+    ball.position.set(x, y, 0);
+    g.add(ball);
   }
   return g;
 }
-
 function makeStickModel() {
   const mat = new THREE.MeshLambertMaterial({ color: 0x8a5a3a });
   const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.035, 0.45, 5), mat);
   stick.rotation.z = Math.PI / 2;
   return stick;
 }
-
 function makeWoolModel() {
   const g = new THREE.Group();
   const mat = new THREE.MeshLambertMaterial({ color: 0xf0f0f0 });
-  const base = new THREE.Mesh(new THREE.SphereGeometry(0.12, 7, 5), mat);
-  g.add(base);
+  g.add(new THREE.Mesh(new THREE.SphereGeometry(0.12, 7, 5), mat));
   for (let i = 0; i < 6; i++) {
     const bump = new THREE.Mesh(new THREE.SphereGeometry(0.05, 5, 4), mat);
     const a = (i / 6) * Math.PI * 2;
@@ -1216,37 +1532,22 @@ function makeWoolModel() {
   }
   return g;
 }
-
 function makeSlimeballModel() {
   const g = new THREE.Group();
-  const outer = new THREE.Mesh(
-    new THREE.SphereGeometry(0.11, 8, 6),
-    new THREE.MeshLambertMaterial({ color: 0x7ec87e, transparent: true, opacity: 0.7 })
-  );
-  g.add(outer);
-  const inner = new THREE.Mesh(
-    new THREE.SphereGeometry(0.05, 5, 4),
-    new THREE.MeshBasicMaterial({ color: 0xc0f0c0 })
-  );
-  g.add(inner);
+  g.add(new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 6), new THREE.MeshLambertMaterial({ color: 0x7ec87e, transparent: true, opacity: 0.7 })));
+  g.add(new THREE.Mesh(new THREE.SphereGeometry(0.05, 5, 4), new THREE.MeshBasicMaterial({ color: 0xc0f0c0 })));
   return g;
 }
-
 function makeGunpowderModel() {
   const g = new THREE.Group();
   const mat = new THREE.MeshLambertMaterial({ color: 0x444444 });
   for (let i = 0; i < 10; i++) {
     const speck = new THREE.Mesh(new THREE.SphereGeometry(0.025, 4, 3), mat);
-    speck.position.set(
-      (Math.random() - 0.5) * 0.15,
-      (Math.random() - 0.5) * 0.08,
-      (Math.random() - 0.5) * 0.15
-    );
+    speck.position.set((Math.random() - 0.5) * 0.15, (Math.random() - 0.5) * 0.08, (Math.random() - 0.5) * 0.15);
     g.add(speck);
   }
   return g;
 }
-
 function makeArrowModel() {
   const g = new THREE.Group();
   const woodMat = new THREE.MeshLambertMaterial({ color: 0x8a5a3a });
@@ -1268,7 +1569,6 @@ function makeArrowModel() {
   }
   return g;
 }
-
 function makeBatWingModel() {
   const g = new THREE.Group();
   const mat = new THREE.MeshLambertMaterial({ color: 0x5a4a6a, side: THREE.DoubleSide });
@@ -1279,9 +1579,7 @@ function makeBatWingModel() {
   shape.lineTo(0.15, -0.08);
   shape.lineTo(0.05, -0.15);
   shape.lineTo(0, 0);
-  const geo = new THREE.ShapeGeometry(shape);
-  const wing = new THREE.Mesh(geo, mat);
-  g.add(wing);
+  g.add(new THREE.Mesh(new THREE.ShapeGeometry(shape), mat));
   const boneMat = new THREE.MeshLambertMaterial({ color: 0x2a1a3a });
   for (const [x, y] of [[0.28, -0.12], [0.15, -0.08], [0.05, -0.15]]) {
     const bone = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, Math.hypot(x, y), 4), boneMat);
@@ -1291,7 +1589,6 @@ function makeBatWingModel() {
   }
   return g;
 }
-
 function makeLeatherModel() {
   const g = new THREE.Group();
   const mat = new THREE.MeshLambertMaterial({ color: 0x8a5a3a, side: THREE.DoubleSide });
@@ -1313,15 +1610,13 @@ function makeLeatherModel() {
   g.add(back);
   return g;
 }
-
 function makeBedModel() {
   const g = new THREE.Group();
   const wood = new THREE.MeshLambertMaterial({ color: 0x8a5a3a });
   const sheet = new THREE.MeshLambertMaterial({ color: 0xf0f0f0 });
   const pillow = new THREE.MeshLambertMaterial({ color: 0xffffff });
   const blanket = new THREE.MeshLambertMaterial({ color: 0xa03030 });
-  const frame = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.05, 0.28), wood);
-  g.add(frame);
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.05, 0.28), wood));
   const mat = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.06, 0.26), sheet);
   mat.position.y = 0.055;
   g.add(mat);
@@ -1333,7 +1628,6 @@ function makeBedModel() {
   g.add(pil);
   return g;
 }
-
 function makeTorchModel() {
   const g = new THREE.Group();
   const wood = new THREE.MeshLambertMaterial({ color: 0x8a5a3a });
@@ -1352,46 +1646,6 @@ function makeTorchModel() {
   g.add(f2);
   return g;
 }
-
-const ITEM_MODELS = {
-  // Materials
-  stick:        makeStickModel,
-  coal:         makeCoalModel,
-  iron:         () => makeIngotModel(0xd9a679),
-  gold:         () => makeIngotModel(0xffd700),
-  diamond:      makeDiamondModel,
-  wool:         makeWoolModel,
-  leather:      makeLeatherModel,
-  bone:         makeBoneModel,
-  feather:      makeFeatherModel,
-  arrow:        makeArrowModel,
-  gunpowder:    makeGunpowderModel,
-  slimeball:    makeSlimeballModel,
-  bat_wing:     makeBatWingModel,
-
-  // Food
-  raw_beef:     () => makeMeatModel(0xc25a5a, 0xe08a8a, false),
-  raw_porkchop: () => makeMeatModel(0xffb8b8, 0xffd8d8, true),
-  raw_mutton:   () => makeMeatModel(0xe07a7a, 0xf0a0a0, false),
-  raw_chicken:  makeChickenModel,
-  rotten_flesh: makeRottenFleshModel,
-
-  // Tools
-  wood_pickaxe:  () => makeToolModel(0x8a5a3a, 0x8a5a3a, 'pickaxe'),
-  stone_pickaxe: () => makeToolModel(0x8a5a3a, 0x808080, 'pickaxe'),
-  iron_pickaxe:  () => makeToolModel(0x8a5a3a, 0xd9a679, 'pickaxe'),
-  wood_axe:      () => makeToolModel(0x8a5a3a, 0x8a5a3a, 'axe'),
-  stone_axe:     () => makeToolModel(0x8a5a3a, 0x808080, 'axe'),
-  iron_axe:      () => makeToolModel(0x8a5a3a, 0xd9a679, 'axe'),
-  wood_sword:    () => makeToolModel(0x6d4c2a, 0x8a5a3a, 'sword'),
-  stone_sword:   () => makeToolModel(0x6d4c2a, 0x808080, 'sword'),
-  iron_sword:    () => makeToolModel(0x6d4c2a, 0xd9a679, 'sword'),
-
-  // Utility
-  bed:   makeBedModel,
-  torch: makeTorchModel,
-};
-
 function makeToolModel(handleColor, headColor, kind) {
   const g = new THREE.Group();
   const handleMat = new THREE.MeshLambertMaterial({ color: handleColor });
@@ -1422,7 +1676,38 @@ function makeToolModel(handleColor, headColor, kind) {
   return g;
 }
 
-// Properly dispose + remove every child of the held item holder
+const ITEM_MODELS = {
+  stick:        makeStickModel,
+  coal:         makeCoalModel,
+  iron:         () => makeIngotModel(0xd9a679),
+  gold:         () => makeIngotModel(0xffd700),
+  diamond:      makeDiamondModel,
+  wool:         makeWoolModel,
+  leather:      makeLeatherModel,
+  bone:         makeBoneModel,
+  feather:      makeFeatherModel,
+  arrow:        makeArrowModel,
+  gunpowder:    makeGunpowderModel,
+  slimeball:    makeSlimeballModel,
+  bat_wing:     makeBatWingModel,
+  raw_beef:     () => makeMeatModel(0xc25a5a, 0xe08a8a, false),
+  raw_porkchop: () => makeMeatModel(0xffb8b8, 0xffd8d8, true),
+  raw_mutton:   () => makeMeatModel(0xe07a7a, 0xf0a0a0, false),
+  raw_chicken:  makeChickenModel,
+  rotten_flesh: makeRottenFleshModel,
+  wood_pickaxe:  () => makeToolModel(0x8a5a3a, 0x8a5a3a, 'pickaxe'),
+  stone_pickaxe: () => makeToolModel(0x8a5a3a, 0x808080, 'pickaxe'),
+  iron_pickaxe:  () => makeToolModel(0x8a5a3a, 0xd9a679, 'pickaxe'),
+  wood_axe:      () => makeToolModel(0x8a5a3a, 0x8a5a3a, 'axe'),
+  stone_axe:     () => makeToolModel(0x8a5a3a, 0x808080, 'axe'),
+  iron_axe:      () => makeToolModel(0x8a5a3a, 0xd9a679, 'axe'),
+  wood_sword:    () => makeToolModel(0x6d4c2a, 0x8a5a3a, 'sword'),
+  stone_sword:   () => makeToolModel(0x6d4c2a, 0x808080, 'sword'),
+  iron_sword:    () => makeToolModel(0x6d4c2a, 0xd9a679, 'sword'),
+  bed:   makeBedModel,
+  torch: makeTorchModel,
+};
+
 function clearHeldItem() {
   while (heldItemHolder.children.length > 0) {
     const c = heldItemHolder.children[0];
@@ -1430,7 +1715,6 @@ function clearHeldItem() {
     c.traverse(function (o) {
       if (o.isMesh) {
         if (o.geometry) o.geometry.dispose();
-        // Don't dispose shared materials (like atlasTexture-based block mats)
         if (o.material && !o.material.map) {
           if (Array.isArray(o.material)) o.material.forEach(m => m.dispose && m.dispose());
           else if (o.material.dispose) o.material.dispose();
@@ -1440,11 +1724,10 @@ function clearHeldItem() {
   }
 }
 
-// Called whenever the hotbar selection changes or the stack changes
 function updateHeldItemMesh() {
   clearHeldItem();
   const slot = inventory[selectedSlot];
-  if (!slot) return;   // empty hand — just the arm shows
+  if (!slot) return;
 
   let blockId = null;
   for (const id in BLOCKS) {
@@ -1480,25 +1763,26 @@ function updateHeldItemMesh() {
   heldItemHolder.add(mesh);
 }
 
-// Lights
+// ============================================================
+// LIGHTS
+// ============================================================
 const sun = new THREE.DirectionalLight(0xffffff, 0.8);
 sun.position.set(50, 100, 30);
 sun.castShadow = true;
 sun.shadow.mapSize.width = 1024;
 sun.shadow.mapSize.height = 1024;
 
-// Shadow camera needs to cover the render distance
-const SHADOW_RADIUS = RENDER_DISTANCE * CHUNK_SIZE;   // in world units
+const SHADOW_RADIUS = RENDER_DISTANCE * CHUNK_SIZE;
 sun.shadow.camera.left = -SHADOW_RADIUS;
 sun.shadow.camera.right = SHADOW_RADIUS;
 sun.shadow.camera.top = SHADOW_RADIUS;
 sun.shadow.camera.bottom = -SHADOW_RADIUS;
 sun.shadow.camera.near = 0.5;
 sun.shadow.camera.far = 200;
-sun.shadow.bias = -0.0005;         // reduces shadow acne
+sun.shadow.bias = -0.0005;
 sun.shadow.normalBias = 0.02;
 sun.shadow.camera.updateProjectionMatrix();
-sun.shadow.autoUpdate = true;    // we'll update it manually less often
+sun.shadow.autoUpdate = true;
 sun.shadow.needsUpdate = true;
 
 scene.add(sun);
@@ -1508,7 +1792,7 @@ const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
 scene.add(ambientLight);
 
 // ============================================================
-// MATERIALS — textured, per block id
+// MATERIALS
 // ============================================================
 const materials = {};
 for (const id in BLOCKS) {
@@ -1605,7 +1889,6 @@ function rebuildChunk(cx, cz) {
     geo.setAttribute('position', new THREE.Float32BufferAttribute(bk.pos, 3));
     geo.setAttribute('normal', new THREE.Float32BufferAttribute(bk.nor, 3));
     geo.setAttribute('color', new THREE.Float32BufferAttribute(bk.col, 3));
-    // UVs
     const count = bk.pos.length / 3;
     const uv = uvForBlock(+id);
     const uvs = new Float32Array(count * 2);
@@ -1635,8 +1918,6 @@ function rebuildChunk(cx, cz) {
 let lastPlayerChunkX = -9999;
 let lastPlayerChunkZ = -9999;
 
-
-
 function unloadChunkMesh(cx, cz) {
   const key = cx + ',' + cz;
   if (!chunkMeshes[key]) return;
@@ -1654,10 +1935,9 @@ function updateChunkStreaming() {
   lastPlayerChunkX = pcx;
   lastPlayerChunkZ = pcz;
 
-  const loadR = RENDER_DISTANCE;
+  const loadR = (typeof gameState !== 'undefined') ? gameState.renderDistance : RENDER_DISTANCE;
   const newChunks = [];
 
-  // Load: generate + mesh everything within RENDER_DISTANCE
   for (let dx = -loadR; dx <= loadR; dx++) {
     for (let dz = -loadR; dz <= loadR; dz++) {
       const cx = pcx + dx;
@@ -1671,7 +1951,6 @@ function updateChunkStreaming() {
     }
   }
 
-  // Remesh neighbors of new chunks so edge culling updates
   const remeshed = new Set();
   for (const [cx, cz] of newChunks) {
     const nbrs = [[cx-1,cz],[cx+1,cz],[cx,cz-1],[cx,cz+1]];
@@ -1684,7 +1963,6 @@ function updateChunkStreaming() {
     }
   }
 
-  // Unload: evict chunks outside RENDER_DISTANCE + UNLOAD_MARGIN
   const unloadR = RENDER_DISTANCE + UNLOAD_MARGIN;
   for (const key of Array.from(chunks.keys())) {
     const [cx, cz] = key.split(',').map(Number);
@@ -1702,13 +1980,12 @@ function updateChunkStreaming() {
     }
   }
 
-  // HUD
   const cc = document.getElementById('chunkcount');
   if (cc) cc.textContent = Object.keys(chunkMeshes).length;
   const ct = document.getElementById('chunktotal');
   if (ct) ct.textContent = chunks.size;
   const rd = document.getElementById('renderdist');
-  if (rd) rd.textContent = RENDER_DISTANCE;
+  if (rd) rd.textContent = (typeof gameState !== 'undefined') ? gameState.renderDistance : RENDER_DISTANCE;
 }
 
 function rebuildChunksAround(x, y, z) {
@@ -1737,8 +2014,8 @@ const player = {
   yaw: 0,
   pitch: 0,
   onGround: false,
-  height: 1.7,           // collision height (changes when crouching)
-  eyeHeight: 0.9,        // fraction of height — 0.9 normal, 0.7 crouched
+  height: 1.7,
+  eyeHeight: 0.9,
   radius: 0.3,
   inWater: false,
   headInWater: false,
@@ -1746,8 +2023,6 @@ const player = {
   sprinting: false,
 };
 player.pos.y = surfaceHeight(0, 0) + 3;
-
-
 
 // ============================================================
 // INPUT
@@ -1775,28 +2050,24 @@ let invOpen = false;
 
 renderer.domElement.addEventListener('click', () => {
   if (invOpen) return;
-  if (document.pointerLockElement !== renderer.domElement) {
-    renderer.domElement.requestPointerLock();
-  }
+  if (document.pointerLockElement !== renderer.domElement) safeRequestPointerLock();
 });
 lockEl.addEventListener('click', () => {
-  renderer.domElement.requestPointerLock();
+  safeRequestPointerLock();
 });
-document.addEventListener('pointerlockchange', () => {
-  if (invOpen) return;
-  const locked = document.pointerLockElement === renderer.domElement;
-  lockEl.style.display = locked ? 'none' : 'flex';
-});
+
 addEventListener('mousemove', e => {
   if (invOpen) return;
+  if (typeof gamePaused !== 'undefined' && gamePaused) return;
   if (document.pointerLockElement !== renderer.domElement) return;
-  player.yaw -= e.movementX * 0.002;
-  player.pitch -= e.movementY * 0.002;
+  const sens = 0.002 * ((typeof gameState !== 'undefined' ? gameState.sensitivity : 10) / 10);
+  player.yaw -= e.movementX * sens;
+  player.pitch -= e.movementY * sens;
   player.pitch = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, player.pitch));
 });
 
 // ============================================================
-// PHYSICS + COLLISION
+// PHYSICS
 // ============================================================
 function isSolid(x, y, z) {
   const b = getBlock(Math.floor(x), Math.floor(y), Math.floor(z));
@@ -1819,14 +2090,15 @@ function collides(px, py, pz, heightOverride) {
 }
 
 function updatePhysics(dt) {
-  // ---- Crouch handling ----
+  const gs = (typeof gameState !== 'undefined') ? gameState : { flight: false, noclip: false, speedMult: 1 };
+
+  // ---- Crouch ----
   const wantCrouch = player.crouching && player.onGround;
   if (wantCrouch && !player.crouching) {
     player.crouching = true;
     player.height = 1.4;
     player.eyeHeight = 0.7;
   } else if (!wantCrouch && player.crouching) {
-    // Only uncrouch if there's headroom
     if (!collides(player.pos.x, player.pos.y, player.pos.z, 1.7)) {
       player.crouching = false;
       player.height = 1.7;
@@ -1834,13 +2106,67 @@ function updatePhysics(dt) {
     }
   }
 
+  // ---- Flight ----
+  if (gs.flight) {
+    const speed = (keys['ShiftLeft'] ? 18 : 9) * gs.speedMult;
+    let mx = 0, my = 0, mz = 0;
+    if (keys['KeyW']) mz -= 1;
+    if (keys['KeyS']) mz += 1;
+    if (keys['KeyA']) mx -= 1;
+    if (keys['KeyD']) mx += 1;
+    if (keys['Space']) my += 1;
+    if (keys['ShiftRight'] || keys['ControlLeft']) my -= 1;
+    const len = Math.hypot(mx, mz);
+    if (len > 0) { mx /= len; mz /= len; }
+    const sin = Math.sin(player.yaw), cos = Math.cos(player.yaw);
+    const dx = (mx * cos + mz * sin) * speed;
+    const dz = (-mx * sin + mz * cos) * speed;
+    const dy = my * speed;
+
+    if (gs.noclip) {
+      player.pos.x += dx * dt;
+      player.pos.y += dy * dt;
+      player.pos.z += dz * dt;
+    } else {
+      let nx = player.pos.x + dx * dt;
+      if (!collides(nx, player.pos.y, player.pos.z)) player.pos.x = nx;
+      let nz = player.pos.z + dz * dt;
+      if (!collides(player.pos.x, player.pos.y, nz)) player.pos.z = nz;
+      let ny = player.pos.y + dy * dt;
+      if (!collides(player.pos.x, ny, player.pos.z)) player.pos.y = ny;
+    }
+    player.vel.set(0, 0, 0);
+    player.onGround = false;
+    const feetBlock = getBlock(Math.floor(player.pos.x), Math.floor(player.pos.y + 0.2), Math.floor(player.pos.z));
+    const headBlock = getBlock(Math.floor(player.pos.x), Math.floor(player.pos.y + player.height - 0.1), Math.floor(player.pos.z));
+    player.inWater = (feetBlock === 11) || (headBlock === 11);
+    player.headInWater = (headBlock === 11);
+    return;
+  }
+
+  // ---- Noclip without flight ----
+  if (gs.noclip) {
+    const speed = 6 * gs.speedMult;
+    let mx = 0, mz = 0;
+    if (keys['KeyW']) mz -= 1;
+    if (keys['KeyS']) mz += 1;
+    if (keys['KeyA']) mx -= 1;
+    if (keys['KeyD']) mx += 1;
+    const len = Math.hypot(mx, mz);
+    if (len > 0) { mx /= len; mz /= len; }
+    const sin = Math.sin(player.yaw), cos = Math.cos(player.yaw);
+    player.pos.x += (mx * cos + mz * sin) * speed * dt;
+    player.pos.z += (-mx * sin + mz * cos) * speed * dt;
+    return;
+  }
+
+  // ---- Normal gravity ----
   player.vel.y -= 25 * dt;
   if (player.vel.y < -30) player.vel.y = -30;
 
-  // Sprint requires hunger > 6 AND not crouching
   const canSprint = hunger.value > 6 && !player.headInWater && !player.crouching;
   const baseSpeed = player.crouching ? 1.4 : 4.5;
-  const speed = (keys['ShiftLeft'] && canSprint ? 8 : baseSpeed);
+  const speed = (keys['ShiftLeft'] && canSprint ? 8 : baseSpeed) * gs.speedMult;
   player.sprinting = keys['ShiftLeft'] && canSprint && (keys['KeyW'] || keys['KeyS'] || keys['KeyA'] || keys['KeyD']);
 
   let mx = 0, mz = 0;
@@ -1875,18 +2201,17 @@ function updatePhysics(dt) {
     player.vel.set(0, 0, 0);
   }
 
-  // Water detection — feet block and head block
   const feetBlock = getBlock(Math.floor(player.pos.x), Math.floor(player.pos.y + 0.2), Math.floor(player.pos.z));
   const headBlock = getBlock(Math.floor(player.pos.x), Math.floor(player.pos.y + player.height - 0.1), Math.floor(player.pos.z));
   player.inWater = (feetBlock === 11) || (headBlock === 11);
   player.headInWater = (headBlock === 11);
 
-  // Buoyancy + swim — slower fall, space swims up
   if (player.inWater) {
     if (player.vel.y < -3) player.vel.y = -3;
     if (keys['Space']) player.vel.y = Math.max(player.vel.y, 3.5);
   }
 }
+
 
 // ============================================================
 // TOAST
@@ -1908,10 +2233,9 @@ function toast(msg) {
 }
 
 // ============================================================
-// ITEM ICONS — SVG strings
+// ITEM ICONS (SVG for UI)
 // ============================================================
 const ICONS = {
-  // Materials
   stick: `<line x1="6" y1="28" x2="26" y2="6" stroke="#000" stroke-width="6" stroke-linecap="round"/>
           <line x1="6" y1="28" x2="26" y2="6" stroke="#8a5a3a" stroke-width="4" stroke-linecap="round"/>
           <line x1="7" y1="27" x2="24" y2="8" stroke="#a87040" stroke-width="1" stroke-linecap="round"/>`,
@@ -1932,8 +2256,7 @@ const ICONS = {
          <circle cx="18" cy="20" r="2" fill="#fff"/>
          <circle cx="10" cy="19" r="1.8" fill="#fff"/>`,
   leather: `<path d="M6 12 Q4 8 8 6 Q14 3 20 5 Q28 8 27 16 Q26 24 20 26 Q12 28 8 24 Q4 20 6 12 Z"
-              fill="#8a5a3a" stroke="#5a3a20" stroke-width="1.5"/>
-            <path d="M10 10 Q14 8 20 9" stroke="#5a3a20" stroke-width="1" fill="none" opacity="0.6"/>`,
+              fill="#8a5a3a" stroke="#5a3a20" stroke-width="1.5"/>`,
   bone: `<rect x="6" y="14" width="20" height="4" fill="#f0f0e0" stroke="#a0a090" stroke-width="1"/>
          <circle cx="6" cy="14" r="3" fill="#f0f0e0" stroke="#a0a090" stroke-width="1"/>
          <circle cx="6" cy="18" r="3" fill="#f0f0e0" stroke="#a0a090" stroke-width="1"/>
@@ -1941,47 +2264,29 @@ const ICONS = {
          <circle cx="26" cy="18" r="3" fill="#f0f0e0" stroke="#a0a090" stroke-width="1"/>`,
   feather: `<path d="M8 26 Q10 22 14 16 Q20 8 26 6 Q24 14 20 20 Q16 26 8 26 Z"
               fill="#f4f4f4" stroke="#a0a0a0" stroke-width="1"/>
-            <line x1="8" y1="26" x2="24" y2="8" stroke="#8a5a3a" stroke-width="1"/>
-            <line x1="12" y1="20" x2="18" y2="14" stroke="#a0a0a0" stroke-width="0.8"/>
-            <line x1="14" y1="22" x2="20" y2="16" stroke="#a0a0a0" stroke-width="0.8"/>`,
+            <line x1="8" y1="26" x2="24" y2="8" stroke="#8a5a3a" stroke-width="1"/>`,
   arrow: `<line x1="6" y1="26" x2="24" y2="8" stroke="#8a5a3a" stroke-width="2"/>
           <path d="M24 8 L28 4 L26 10 L22 6 Z" fill="#d0d0d0" stroke="#666" stroke-width="0.8"/>
-          <path d="M6 26 L4 28 L8 24 Z" fill="#f4f4f4" stroke="#a0a0a0" stroke-width="0.6"/>
-          <path d="M8 22 L4 26" stroke="#f4f4f4" stroke-width="1.5"/>
-          <path d="M10 24 L6 28" stroke="#f4f4f4" stroke-width="1.5"/>`,
+          <path d="M6 26 L4 28 L8 24 Z" fill="#f4f4f4" stroke="#a0a0a0" stroke-width="0.6"/>`,
   gunpowder: `<circle cx="10" cy="12" r="2" fill="#555"/>
               <circle cx="16" cy="10" r="2.2" fill="#333"/>
               <circle cx="22" cy="13" r="1.8" fill="#555"/>
               <circle cx="12" cy="18" r="2" fill="#333"/>
-              <circle cx="18" cy="17" r="2.4" fill="#555"/>
-              <circle cx="24" cy="20" r="1.6" fill="#333"/>
-              <circle cx="15" cy="23" r="1.8" fill="#555"/>`,
+              <circle cx="18" cy="17" r="2.4" fill="#555"/>`,
   slimeball: `<ellipse cx="16" cy="17" rx="12" ry="11" fill="#7ec87e" opacity="0.85" stroke="#4a9040" stroke-width="1.5"/>
               <ellipse cx="12" cy="13" rx="3" ry="2" fill="#c0f0c0" opacity="0.7"/>`,
   bat_wing: `<path d="M16 8 L4 14 L8 22 L12 20 L16 26 L20 20 L24 22 L28 14 Z"
-              fill="#5a4a6a" stroke="#2a1a3a" stroke-width="1.5"/>
-            <line x1="16" y1="8" x2="16" y2="26" stroke="#2a1a3a" stroke-width="1"/>
-            <line x1="16" y1="14" x2="6" y2="14" stroke="#2a1a3a" stroke-width="0.8"/>
-            <line x1="16" y1="14" x2="26" y2="14" stroke="#2a1a3a" stroke-width="0.8"/>`,
+              fill="#5a4a6a" stroke="#2a1a3a" stroke-width="1.5"/>`,
   raw_beef: `<ellipse cx="16" cy="17" rx="11" ry="9" fill="#c25a5a" stroke="#7a2a2a" stroke-width="1.5"/>
-             <ellipse cx="12" cy="14" rx="4" ry="2.5" fill="#e08a8a" opacity="0.7"/>
-             <path d="M22 12 Q24 14 22 18" stroke="#7a2a2a" stroke-width="1" fill="none"/>`,
+             <ellipse cx="12" cy="14" rx="4" ry="2.5" fill="#e08a8a" opacity="0.7"/>`,
   raw_porkchop: `<ellipse cx="17" cy="17" rx="10" ry="8" fill="#ffb8b8" stroke="#a05050" stroke-width="1.5"/>
-                 <path d="M7 14 L4 12 L2 15 L5 17 Z" fill="#f0f0e0" stroke="#a0a090" stroke-width="1"/>
-                 <ellipse cx="14" cy="15" rx="4" ry="2" fill="#ffd8d8" opacity="0.7"/>`,
+                 <path d="M7 14 L4 12 L2 15 L5 17 Z" fill="#f0f0e0" stroke="#a0a090" stroke-width="1"/>`,
   raw_mutton: `<ellipse cx="16" cy="17" rx="11" ry="8" fill="#e07a7a" stroke="#8a3030" stroke-width="1.5"/>
-               <ellipse cx="13" cy="14" rx="4" ry="2.5" fill="#f0a0a0" opacity="0.7"/>
-               <ellipse cx="20" cy="19" rx="3" ry="2" fill="#8a3030" opacity="0.4"/>`,
+               <ellipse cx="13" cy="14" rx="4" ry="2.5" fill="#f0a0a0" opacity="0.7"/>`,
   raw_chicken: `<ellipse cx="16" cy="17" rx="10" ry="8" fill="#ffe8b8" stroke="#c0a070" stroke-width="1.5"/>
-                <ellipse cx="13" cy="14" rx="4" ry="2.5" fill="#fff8d8" opacity="0.8"/>
-                <ellipse cx="19" cy="19" rx="2" ry="1.5" fill="#d0a870" opacity="0.6"/>`,
+                <ellipse cx="13" cy="14" rx="4" ry="2.5" fill="#fff8d8" opacity="0.8"/>`,
   rotten_flesh: `<path d="M6 12 Q4 8 10 6 Q20 4 26 8 Q28 14 26 20 Q24 26 16 26 Q8 26 6 20 Z"
-                   fill="#8a6f5a" stroke="#4a3520" stroke-width="1.5"/>
-                 <circle cx="11" cy="12" r="2" fill="#5a4030"/>
-                 <circle cx="20" cy="14" r="2.5" fill="#5a4030"/>
-                 <circle cx="14" cy="20" r="1.8" fill="#5a4030"/>
-                 <circle cx="22" cy="20" r="1.5" fill="#7a5a40" opacity="0.6"/>`,
-  // Pickaxes
+                   fill="#8a6f5a" stroke="#4a3520" stroke-width="1.5"/>`,
   wood_pickaxe: `<line x1="6" y1="28" x2="20" y2="10" stroke="#000" stroke-width="5" stroke-linecap="round"/>
                  <line x1="6" y1="28" x2="20" y2="10" stroke="#b98345" stroke-width="3" stroke-linecap="round"/>
                  <path d="M8 14 Q18 2 28 12" stroke="#000" stroke-width="7" stroke-linecap="round" fill="none"/>
@@ -1993,9 +2298,7 @@ const ICONS = {
   iron_pickaxe: `<line x1="6" y1="28" x2="20" y2="10" stroke="#000" stroke-width="5" stroke-linecap="round"/>
                  <line x1="6" y1="28" x2="20" y2="10" stroke="#b98345" stroke-width="3" stroke-linecap="round"/>
                  <path d="M8 14 Q18 2 28 12" stroke="#000" stroke-width="7" stroke-linecap="round" fill="none"/>
-                 <path d="M8 14 Q18 2 28 12" stroke="#d9a679" stroke-width="4" stroke-linecap="round" fill="none"/>
-                 <path d="M12 10 Q18 4 22 8" stroke="#f0d0a8" stroke-width="1" fill="none" opacity="0.8"/>`,
-  // Axes
+                 <path d="M8 14 Q18 2 28 12" stroke="#d9a679" stroke-width="4" stroke-linecap="round" fill="none"/>`,
   wood_axe: `<line x1="8" y1="28" x2="20" y2="10" stroke="#000" stroke-width="5" stroke-linecap="round"/>
              <line x1="8" y1="28" x2="20" y2="10" stroke="#b98345" stroke-width="3" stroke-linecap="round"/>
              <path d="M18 4 L28 10 L26 20 L16 14 Z" fill="#000" stroke="#000" stroke-width="3"/>
@@ -2007,33 +2310,24 @@ const ICONS = {
   iron_axe: `<line x1="8" y1="28" x2="20" y2="10" stroke="#000" stroke-width="5" stroke-linecap="round"/>
              <line x1="8" y1="28" x2="20" y2="10" stroke="#b98345" stroke-width="3" stroke-linecap="round"/>
              <path d="M18 4 L28 10 L26 20 L16 14 Z" fill="#000" stroke="#000" stroke-width="3"/>
-             <path d="M18 4 L28 10 L26 20 L16 14 Z" fill="#d9a679" stroke="#a07050" stroke-width="1.5"/>
-             <path d="M20 6 L26 10" stroke="#f0d0a8" stroke-width="1"/>`,
-  // Swords
+             <path d="M18 4 L28 10 L26 20 L16 14 Z" fill="#d9a679" stroke="#a07050" stroke-width="1.5"/>`,
   wood_sword: `<line x1="8" y1="24" x2="26" y2="6" stroke="#000" stroke-width="6" stroke-linecap="round"/>
                <line x1="8" y1="24" x2="26" y2="6" stroke="#8a5a3a" stroke-width="3.5" stroke-linecap="round"/>
                <line x1="4" y1="20" x2="12" y2="28" stroke="#000" stroke-width="4" stroke-linecap="round"/>
-               <line x1="4" y1="20" x2="12" y2="28" stroke="#8d6e63" stroke-width="2.5" stroke-linecap="round"/>
-               <line x1="6" y1="26" x2="2" y2="30" stroke="#6d4c2a" stroke-width="3" stroke-linecap="round"/>`,
+               <line x1="4" y1="20" x2="12" y2="28" stroke="#8d6e63" stroke-width="2.5" stroke-linecap="round"/>`,
   stone_sword: `<line x1="8" y1="24" x2="26" y2="6" stroke="#000" stroke-width="6" stroke-linecap="round"/>
                 <line x1="8" y1="24" x2="26" y2="6" stroke="#808080" stroke-width="3.5" stroke-linecap="round"/>
                 <line x1="4" y1="20" x2="12" y2="28" stroke="#000" stroke-width="4" stroke-linecap="round"/>
-                <line x1="4" y1="20" x2="12" y2="28" stroke="#8d6e63" stroke-width="2.5" stroke-linecap="round"/>
-                <line x1="6" y1="26" x2="2" y2="30" stroke="#6d4c2a" stroke-width="3" stroke-linecap="round"/>`,
+                <line x1="4" y1="20" x2="12" y2="28" stroke="#8d6e63" stroke-width="2.5" stroke-linecap="round"/>`,
   iron_sword: `<line x1="8" y1="24" x2="26" y2="6" stroke="#000" stroke-width="6" stroke-linecap="round"/>
                <line x1="8" y1="24" x2="26" y2="6" stroke="#d9a679" stroke-width="3.5" stroke-linecap="round"/>
                <line x1="10" y1="22" x2="24" y2="8" stroke="#f0d0a8" stroke-width="1" opacity="0.9"/>
                <line x1="4" y1="20" x2="12" y2="28" stroke="#000" stroke-width="4" stroke-linecap="round"/>
-               <line x1="4" y1="20" x2="12" y2="28" stroke="#8d6e63" stroke-width="2.5" stroke-linecap="round"/>
-               <line x1="6" y1="26" x2="2" y2="30" stroke="#6d4c2a" stroke-width="3" stroke-linecap="round"/>`,
+               <line x1="4" y1="20" x2="12" y2="28" stroke="#8d6e63" stroke-width="2.5" stroke-linecap="round"/>`,
 };
 
-// ============================================================
-// ICON RENDERING
-// ============================================================
 function iconHTML(itemName) {
   if (!itemName) return '';
-  // Block items: use the color swatch
   for (const id in BLOCKS) {
     if (BLOCKS[id].name === itemName) {
       const c = BLOCKS[id].color;
@@ -2041,11 +2335,9 @@ function iconHTML(itemName) {
       return '<div style="width:40px;height:40px;background:' + hex + ';border:1px solid rgba(0,0,0,.5);"></div>';
     }
   }
-  // SVG item
   if (ICONS[itemName]) {
     return '<svg viewBox="0 0 32 32" width="40" height="40">' + ICONS[itemName] + '</svg>';
   }
-  // Fallback: colored square
   const c = ITEMS[itemName] ? ITEMS[itemName].color : 0x999999;
   const hex = '#' + (c >>> 0).toString(16).padStart(6, '0');
   return '<div style="width:40px;height:40px;background:' + hex + ';border-radius:4px;"></div>';
@@ -2058,6 +2350,7 @@ const inventory = new Array(INV_SIZE).fill(null);
 const craftGrid = new Array(9).fill(null);
 let heldItem = null;
 let selectedSlot = 0;
+
 addEventListener('keydown', function (e) {
   if (e.code >= 'Digit1' && e.code <= 'Digit9') {
     selectedSlot = +e.code.slice(5) - 1;
@@ -2249,7 +2542,6 @@ function returnGridToInventory() {
 
 function openInventory() {
   invOpen = true;
-  window._invOpen = true;
   invPanel.style.display = 'flex';
   lockEl.style.display = 'none';
   if (document.pointerLockElement) document.exitPointerLock();
@@ -2257,7 +2549,6 @@ function openInventory() {
 }
 function closeInventory() {
   invOpen = false;
-  window._invOpen = false;
   invPanel.style.display = 'none';
   if (heldItem) { addToInventory(heldItem.item, heldItem.count); heldItem = null; }
   returnGridToInventory();
@@ -2265,10 +2556,12 @@ function closeInventory() {
   refreshHotbarUI();
   updateHeldItemMesh();
   setTimeout(() => {
-    if (!invOpen && renderer.domElement) {
-      renderer.domElement.requestPointerLock();
+    if (!invOpen && !gamePaused) {
+      safeRequestPointerLock();
       setTimeout(() => {
-        if (document.pointerLockElement !== renderer.domElement) lockEl.style.display = 'flex';
+        if (document.pointerLockElement !== renderer.domElement && !invOpen && !gamePaused) {
+          lockEl.style.display = 'flex';
+        }
       }, 100);
     }
   }, 10);
@@ -2284,7 +2577,6 @@ function updateCursorItem(x, y) {
   cursorItemEl.textContent = heldItem.count > 1 ? heldItem.count : '';
 }
 
-// Drag state
 let isDragging = false;
 let dragButton = 0;
 let dragVisited = new Set();
@@ -2349,7 +2641,6 @@ invPanel.addEventListener('mousedown', function (e) {
   const isShift = e.shiftKey;
   const slot = getSlotItem(el);
 
-  // Shift-click transfer
   if (isShift && el.classList.contains('inv-slot')) {
     if (!slot) return;
     const idx = +el.dataset.idx;
@@ -2378,7 +2669,6 @@ invPanel.addEventListener('mousedown', function (e) {
 
   const isDoubleClick = e.detail === 2;
 
-  // Normal click
   if (!heldItem) {
     if (!slot) return;
     if (isRight) {
@@ -2444,7 +2734,6 @@ invPanel.addEventListener('mousedown', function (e) {
     }
   }
 
-  // Double-click collect
   if (isDoubleClick && heldItem && !isShift) {
     const target = heldItem.item;
     for (let i = 0; i < INV_SIZE && heldItem && heldItem.count < STACK_MAX; i++) {
@@ -2508,28 +2797,22 @@ invPanel.addEventListener('mouseup', () => {
 invPanel.addEventListener('mouseleave', () => { isDragging = false; });
 invPanel.addEventListener('contextmenu', e => e.preventDefault());
 
-// Inventory open/close key
 addEventListener('keydown', function (e) {
   if (e.target.tagName === 'INPUT') return;
   if ((e.key === 'e' || e.key === 'E') && !e.ctrlKey && !e.metaKey) {
+    if (gamePaused) return;
     e.preventDefault();
     toggleInventory();
   }
-  if (e.key === 'Escape' && invOpen) closeInventory();
 });
 
 // ============================================================
-// HOTBAR UI
+// HOTBAR
 // ============================================================
 const hudEl = document.getElementById('hud');
 
-// ============================================================
-// STATE ICON (bottom-left) — shows standing / sneaking / swimming
-// ============================================================
 const stateIconEl = document.getElementById('state-icon');
 
-// Minecraft Bedrock-style icons. Simple blocky silhouettes.
-// White figure, transparent background, no border.
 const STATE_ICONS = {
   standing: `
     <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
@@ -2565,11 +2848,9 @@ function updateStateIcon() {
   let state = 'standing';
   if (player.headInWater) state = 'swimming';
   else if (player.crouching) state = 'sneaking';
-
   if (state === lastState) return;
   lastState = state;
   stateIconEl.innerHTML = STATE_ICONS[state];
-  stateIconEl.classList.remove('hidden'); 
 }
 
 const itemNameEl = document.createElement('div');
@@ -2610,7 +2891,6 @@ function refreshHotbarUI() {
   hudEl.innerHTML = html;
 }
 
-
 // ============================================================
 // RAYCAST
 // ============================================================
@@ -2636,104 +2916,11 @@ function pickBlock() {
 }
 
 // ============================================================
-// MINING — one item per block, no duplicate
-// ============================================================
-addEventListener('mousedown', function (e) {
-  if (document.pointerLockElement !== renderer.domElement) return;
-  if (e.button !== 0) return;
-  const result = pickBlock();
-  if (!result) return;
-  const { x, y, z, block } = result.hit;
-  const def = BLOCKS[block];
-  if (!def || !def.name) return;
-  // Actually break the block
-  setBlock(x, y, z, 0);
-  rebuildChunksAround(x, y, z);
-  // Give the item
-  addToInventory(def.name, 1);
-  refreshHotbarUI();
-  updateHeldItemMesh();
-  toast('+1 ' + itemLabel(def.name));
-}, true);
-
-// ============================================================
-// PLACING
-// ============================================================
-window._batch4HandlesPlacing = true;
-
-addEventListener('mousedown', function (e) {
-  if (document.pointerLockElement !== renderer.domElement) return;
-  if (e.button !== 2) return;
-  const slot = inventory[selectedSlot];
-  if (!slot) return;
-  if (typeof FOODS !== 'undefined' && FOODS[slot.item]) return;  // eating is handled elsewhere
-  if (slot.item === 'bed' || slot.item === 'torch') return;      // handled by bed/torch listener
-
-  let blockId = null;
-  for (const id in BLOCKS) {
-    if (BLOCKS[id].name === slot.item) { blockId = +id; break; }
-  }
-  if (blockId === null) return;
-
-  const result = pickBlock();
-  if (!result) return;
-  const px = result.place.x, py = result.place.y, pz = result.place.z;
-  if (getBlock(px, py, pz) !== 0) return;
-
-  const r = player.radius;
-  const minX = Math.floor(player.pos.x - r), maxX = Math.floor(player.pos.x + r);
-  const minY = Math.floor(player.pos.y), maxY = Math.floor(player.pos.y + player.height);
-  const minZ = Math.floor(player.pos.z - r), maxZ = Math.floor(player.pos.z + r);
-  if (px >= minX && px <= maxX && py >= minY && py <= maxY && pz >= minZ && pz <= maxZ) return;
-
-  setBlock(px, py, pz, blockId);
-  rebuildChunksAround(px, py, pz);
-
-  slot.count -= 1;
-  if (slot.count <= 0) inventory[selectedSlot] = null;
-  refreshHotbarUI();
-  updateHeldItemMesh();
-});
-
-// END OF PART 2
-
-// ============================================================
-// EATING
-// ============================================================
-addEventListener('mousedown', function (e) {
-  if (document.pointerLockElement !== renderer.domElement) return;
-  if (e.button !== 2) return;
-  const slot = inventory[selectedSlot];
-  if (!slot) return;
-  const food = FOODS[slot.item];
-  if (!food) return;
-  if (hunger.value >= hunger.max) { toast('Not hungry'); return; }
-
-  hunger.value = Math.min(hunger.max, hunger.value + food.hunger);
-  slot.count -= 1;
-  if (slot.count <= 0) inventory[selectedSlot] = null;
-  refreshHotbarUI();
-  updateHeldItemMesh();
-  renderHearts();
-  toast('Ate ' + itemLabel(slot.item) + ' (+' + food.hunger + ')');
-
-  if (food.poison > 0 && Math.random() < food.poison) {
-    // Poison: 3 damage over 3 seconds
-    let ticks = 3;
-    const iv = setInterval(function () {
-      if (health.dead) { clearInterval(iv); return; }
-      damagePlayer(1, 'poison');
-      if (--ticks <= 0) clearInterval(iv);
-    }, 1000);
-  }
-}, true);
-
-// ============================================================
-// PLAYER HEALTH + DAMAGE + DEATH
+// HEALTH / HUNGER / OXYGEN / DEATH
 // ============================================================
 const PLAYER_MAX_HP = 20;
-const PLAYER_REGEN_DELAY = 6;      // seconds after last damage before regen
-const PLAYER_REGEN_RATE = 0.5;     // hp per second once regen kicks in
+const PLAYER_REGEN_DELAY = 6;
+const PLAYER_REGEN_RATE = 0.5;
 
 const health = {
   hp: PLAYER_MAX_HP,
@@ -2743,22 +2930,11 @@ const health = {
   dead: false,
 };
 
-// ---- Hunger ----
-const hunger = {
-  value: 20,
-  max: 20,
-  satTimer: 0,          // seconds until next passive drain tick
-};
-const HUNGER_DRAIN_INTERVAL = 40;      // seconds per 1 hunger point (idle)
-const HUNGER_DRAIN_SPRINT   = 30;      // seconds per 1 hunger point (sprinting)
+const hunger = { value: 20, max: 20, satTimer: 0 };
+const HUNGER_DRAIN_INTERVAL = 40;
+const HUNGER_DRAIN_SPRINT   = 30;
 
-// ---- Oxygen ----
-const oxygen = {
-  value: 20,
-  max: 20,
-  drainRate: 1.35,      // hunger units per second underwater (20/1.35 ≈ 15s)
-  refillRate: 8,        // units per second in air
-};
+const oxygen = { value: 20, max: 20, drainRate: 1.35, refillRate: 8 };
 
 const FOODS = {
   raw_beef:     { hunger: 6, poison: 0 },
@@ -2768,7 +2944,6 @@ const FOODS = {
   rotten_flesh: { hunger: 3, poison: 0.8 },
 };
 
-// Red flash overlay
 const hurtFlashEl = document.createElement('div');
 hurtFlashEl.id = 'hurt-flash';
 hurtFlashEl.style.cssText =
@@ -2776,12 +2951,10 @@ hurtFlashEl.style.cssText =
   'opacity:0;z-index:15;transition:opacity .12s;';
 document.body.appendChild(hurtFlashEl);
 
-// Combined stats HUD (hearts + hunger + oxygen)
 const statHudEl = document.createElement('div');
 statHudEl.id = 'stat-hud';
 document.body.appendChild(statHudEl);
 
-// Death overlay
 const deathEl = document.createElement('div');
 deathEl.id = 'death-overlay';
 deathEl.style.cssText =
@@ -2793,7 +2966,6 @@ deathEl.innerHTML =
   '<p style="margin:0;font-size:16px;color:#ffb0b0;">Click to respawn</p>';
 document.body.appendChild(deathEl);
 
-// ---------- Minecraft-style stat icons (inline SVG, 9x9 pixel art) ----------
 const ICON_SVG = {
   heartFull: `<svg viewBox="0 0 9 9" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
     <path fill="#3a0000" d="M1 1h2v1h1V1h1v1h1V1h2v1h1v3h-1v1h-1v1h-1v1H4v1H3V8H2V7H1V6H0V3h1z"/>
@@ -2851,7 +3023,6 @@ const ICON_SVG = {
 function statIconSVG(kind) {
   return '<span class="stat-icon">' + (ICON_SVG[kind] || '') + '</span>';
 }
-
 function statIcons(value, max, fullKey, halfKey, emptyKey) {
   const icons = max / 2;
   let html = '';
@@ -2866,8 +3037,6 @@ function statIcons(value, max, fullKey, halfKey, emptyKey) {
 
 function renderHearts() {
   if (!statHudEl) return;
-
-  // ---- Oxygen row (above hunger, right-aligned) ----
   let oxyRow = '';
   const showOxy = player.headInWater || oxygen.value < oxygen.max;
   if (showOxy) {
@@ -2880,11 +3049,8 @@ function renderHearts() {
     }
     oxyRow = '<div class="stat-line right"><div class="stat-group">' + bubbles + '</div></div>';
   }
-
-  // ---- Hearts (left) + Hunger (right) on the same line ----
   const hearts = statIcons(health.hp, PLAYER_MAX_HP, 'heartFull', 'heartHalf', 'heartEmpty');
   const hungerIcons = statIcons(hunger.value, hunger.max, 'hungerFull', 'hungerHalf', 'hungerEmpty');
-
   statHudEl.innerHTML =
     oxyRow +
     '<div class="stat-line">' +
@@ -2895,19 +3061,17 @@ function renderHearts() {
 
 function damagePlayer(amount, source) {
   if (health.dead) return;
+  if (typeof gameState !== 'undefined' && (gameState.god || gameState.creative)) return;
   health.hp -= amount;
   health.lastDamageT = performance.now() / 1000;
   health.flashT = 0.15;
   hurtFlashEl.style.opacity = '1';
-  if (typeof statHudEl !== 'undefined' && statHudEl) {
+  if (statHudEl) {
     statHudEl.classList.remove('hurt');
     void statHudEl.offsetWidth;
     statHudEl.classList.add('hurt');
   }
-  if (health.hp <= 0) {
-    health.hp = 0;
-    die(source);
-  }
+  if (health.hp <= 0) { health.hp = 0; die(source); }
   renderHearts();
 }
 
@@ -2921,7 +3085,7 @@ function die(source) {
   health.dead = true;
   deathEl.style.display = 'flex';
   if (document.pointerLockElement) document.exitPointerLock();
-  if (typeof showItemName === 'function') itemNameEl.style.opacity = '0';
+  itemNameEl.style.opacity = '0';
 }
 
 function respawnPlayer() {
@@ -2929,7 +3093,6 @@ function respawnPlayer() {
   health.hp = health.max;
   health.lastDamageT = performance.now() / 1000;
   deathEl.style.display = 'none';
-  // Respawn at bed spawn if set, else world center surface
   let sx, sy, sz;
   if (typeof bedSpawnPoint !== 'undefined' && bedSpawnPoint) {
     sx = bedSpawnPoint.x; sy = bedSpawnPoint.y; sz = bedSpawnPoint.z;
@@ -2940,8 +3103,8 @@ function respawnPlayer() {
   player.pos.set(sx, sy, sz);
   player.vel.set(0, 0, 0);
   renderHearts();
-  if (typeof toast === 'function') toast('Respawned');
-  renderer.domElement.requestPointerLock();
+  toast('Respawned');
+  safeRequestPointerLock();
 }
 
 deathEl.addEventListener('click', respawnPlayer);
@@ -2952,11 +3115,29 @@ addEventListener('keydown', function (e) {
   }
 });
 
-// Regen tick (called from loop)
+// Single, clean updateHealth
 function updateHealth(dt) {
   if (health.dead) return;
 
-  // Hurt flash
+  // God mode: no drain, still tick the flash timer
+  if (typeof gameState !== 'undefined' && gameState.god) {
+    if (health.flashT > 0) {
+      health.flashT -= dt;
+      if (health.flashT <= 0) hurtFlashEl.style.opacity = '0';
+    }
+    return;
+  }
+
+  // Creative: keep everything topped off
+  if (typeof gameState !== 'undefined' && gameState.creative) {
+    hunger.value = hunger.max;
+    oxygen.value = oxygen.max;
+    health.hp = health.max;
+    renderHearts();
+    return;
+  }
+
+  // Flash fade
   if (health.flashT > 0) {
     health.flashT -= dt;
     if (health.flashT <= 0) hurtFlashEl.style.opacity = '0';
@@ -2965,12 +3146,11 @@ function updateHealth(dt) {
   const nowS = performance.now() / 1000;
   const sinceDamage = nowS - health.lastDamageT;
 
-  // ---- Oxygen ----
+  // Oxygen
   if (player.headInWater) {
     oxygen.value -= oxygen.drainRate * dt;
     if (oxygen.value <= 0) {
       oxygen.value = 0;
-      // Drowning: 2 HP per second
       health.hp -= 2 * dt;
       health.lastDamageT = nowS;
       if (health.hp <= 0) { health.hp = 0; die('drowning'); }
@@ -2979,27 +3159,25 @@ function updateHealth(dt) {
     if (oxygen.value < oxygen.max) oxygen.value = Math.min(oxygen.max, oxygen.value + oxygen.refillRate * dt);
   }
 
-  // ---- Hunger drain ----
-  if (!health.dead) {
-    let interval = HUNGER_DRAIN_INTERVAL;
-    if (player.sprinting) interval = HUNGER_DRAIN_SPRINT;
-    else if (player.pos.distanceToSquared(player._lastPos || player.pos) > 0.0001) interval *= 0.5;
-    hunger.satTimer += dt;
-    if (hunger.satTimer >= interval) {
-      hunger.satTimer -= interval;
-      if (hunger.value > 0) hunger.value = Math.max(0, hunger.value - 1);
-    }
-    player._lastPos = player.pos.clone();
+  // Hunger drain
+  let interval = HUNGER_DRAIN_INTERVAL;
+  if (player.sprinting) interval = HUNGER_DRAIN_SPRINT;
+  else if (player.pos.distanceToSquared(player._lastPos || player.pos) > 0.0001) interval *= 0.5;
+  hunger.satTimer += dt;
+  if (hunger.satTimer >= interval) {
+    hunger.satTimer -= interval;
+    if (hunger.value > 0) hunger.value = Math.max(0, hunger.value - 1);
   }
+  player._lastPos = player.pos.clone();
 
-  // ---- Starvation ----
+  // Starvation
   if (hunger.value <= 0 && sinceDamage > 4) {
     health.hp -= 1 * dt;
     health.lastDamageT = nowS;
     if (health.hp <= 0) { health.hp = 0; die('starvation'); }
   }
 
-  // ---- Regen (needs hunger >= 15) ----
+  // Regen
   if (hunger.value >= 15 && health.hp < health.max && sinceDamage > PLAYER_REGEN_DELAY) {
     healPlayer(PLAYER_REGEN_RATE * dt);
   } else if (hunger.value >= 18 && health.hp < health.max && sinceDamage > 2) {
@@ -3009,7 +3187,6 @@ function updateHealth(dt) {
   renderHearts();
 }
 
-// Fall damage — patch into physics by watching vertical velocity before landing
 let _peakFallVel = 0;
 function checkFallDamage() {
   if (health.dead) return;
@@ -3026,6 +3203,101 @@ function checkFallDamage() {
 }
 
 renderHearts();
+
+// ============================================================
+// MINING
+// ============================================================
+addEventListener('mousedown', function (e) {
+  if (document.pointerLockElement !== renderer.domElement) return;
+  if (e.button !== 0) return;
+  if (invOpen) return;
+  if (typeof gamePaused !== 'undefined' && gamePaused) return;
+  const result = pickBlock();
+  if (!result) return;
+  const { x, y, z, block } = result.hit;
+  const def = BLOCKS[block];
+  if (!def || !def.name) return;
+  setBlock(x, y, z, 0);
+  rebuildChunksAround(x, y, z);
+  if (typeof gameState !== 'undefined' && gameState.creative) return;
+  addToInventory(def.name, 1);
+  refreshHotbarUI();
+  updateHeldItemMesh();
+  toast('+1 ' + itemLabel(def.name));
+}, true);
+
+// ============================================================
+// PLACING (regular blocks)
+// ============================================================
+addEventListener('mousedown', function (e) {
+  if (document.pointerLockElement !== renderer.domElement) return;
+  if (e.button !== 2) return;
+  if (invOpen) return;
+  if (typeof gamePaused !== 'undefined' && gamePaused) return;
+  const slot = inventory[selectedSlot];
+  if (!slot) return;
+  if (typeof FOODS !== 'undefined' && FOODS[slot.item]) return;
+  if (slot.item === 'bed' || slot.item === 'torch') return;
+
+  let blockId = null;
+  for (const id in BLOCKS) {
+    if (BLOCKS[id].name === slot.item) { blockId = +id; break; }
+  }
+  if (blockId === null) return;
+
+  const result = pickBlock();
+  if (!result) return;
+  const px = result.place.x, py = result.place.y, pz = result.place.z;
+  if (getBlock(px, py, pz) !== 0) return;
+
+  const r = player.radius;
+  const minX = Math.floor(player.pos.x - r), maxX = Math.floor(player.pos.x + r);
+  const minY = Math.floor(player.pos.y), maxY = Math.floor(player.pos.y + player.height);
+  const minZ = Math.floor(player.pos.z - r), maxZ = Math.floor(player.pos.z + r);
+  if (px >= minX && px <= maxX && py >= minY && py <= maxY && pz >= minZ && pz <= maxZ) return;
+
+  setBlock(px, py, pz, blockId);
+  rebuildChunksAround(px, py, pz);
+
+  if (typeof gameState !== 'undefined' && gameState.creative) return;
+
+  slot.count -= 1;
+  if (slot.count <= 0) inventory[selectedSlot] = null;
+  refreshHotbarUI();
+  updateHeldItemMesh();
+}, true);
+
+// ============================================================
+// EATING
+// ============================================================
+addEventListener('mousedown', function (e) {
+  if (document.pointerLockElement !== renderer.domElement) return;
+  if (e.button !== 2) return;
+  if (invOpen) return;
+  if (typeof gamePaused !== 'undefined' && gamePaused) return;
+  const slot = inventory[selectedSlot];
+  if (!slot) return;
+  const food = FOODS[slot.item];
+  if (!food) return;
+  if (hunger.value >= hunger.max) { toast('Not hungry'); return; }
+
+  hunger.value = Math.min(hunger.max, hunger.value + food.hunger);
+  slot.count -= 1;
+  if (slot.count <= 0) inventory[selectedSlot] = null;
+  refreshHotbarUI();
+  updateHeldItemMesh();
+  renderHearts();
+  toast('Ate ' + itemLabel(slot.item) + ' (+' + food.hunger + ')');
+
+  if (food.poison > 0 && Math.random() < food.poison) {
+    let ticks = 3;
+    const iv = setInterval(function () {
+      if (health.dead) { clearInterval(iv); return; }
+      damagePlayer(1, 'poison');
+      if (--ticks <= 0) clearInterval(iv);
+    }, 1000);
+  }
+}, true);
 
 // ============================================================
 // MOB MODELS
@@ -3170,7 +3442,6 @@ function buildSkeletonModel() {
   g.userData.arms = arms;
   return g;
 }
-
 function buildSlimeModel() {
   const g = new THREE.Group();
   const d = MOBS.slime;
@@ -3377,7 +3648,6 @@ const DESPAWN_DIST = 80;
 let spawnCounter = 0;
 
 function lightAt(x, y, z) {
-  // True = sun is up (daytime). Use the same sunY the render loop computes.
   const surf = surfaceHeight(Math.floor(x), Math.floor(z));
   if (y < surf) return 0.2;
   const angle = (dayT - 0.25) * Math.PI * 2;
@@ -3390,10 +3660,7 @@ function makeMob(type, x, y, z) {
   const model = MODEL_BUILDERS[def.model]();
   model.position.set(x, y, z);
   model.traverse(function (o) {
-    if (o.isMesh) {
-      o.castShadow = true;
-      o.receiveShadow = true;
-    }
+    if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; }
   });
   scene.add(model);
   const m = {
@@ -3448,26 +3715,21 @@ function trySpawn() {
   if (!chunks.has(chunkKey(mcx, mcz))) return;
 
   let spawnY = -1;
-
   if (def.spawnWater) {
-    // Water mobs: find a water block with water above it
     for (let y = WORLD_H - 2; y > 1; y--) {
       const b = getBlock(wx, y, wz);
       if (b !== 11) continue;
       if (getBlock(wx, y + 1, wz) !== 11) continue;
-      spawnY = y;
-      break;
+      spawnY = y; break;
     }
     if (spawnY < 1) return;
   } else {
-    // Land mobs: find ground surface
     for (let y = WORLD_H - 2; y > 1; y--) {
       const b = getBlock(wx, y, wz);
       if (b === 0) continue;
       if (BLOCKS[b] && BLOCKS[b].solid === false) continue;
       if (getBlock(wx, y + 1, wz) !== 0) continue;
-      spawnY = y + 1;
-      break;
+      spawnY = y + 1; break;
     }
     if (spawnY < 1) return;
   }
@@ -3489,10 +3751,7 @@ function shootArrow(fx, fy, fz, tx, ty, tz, speed, isFireball) {
   const dx = tx - fx, dy = ty - fy, dz = tz - fz;
   const dist = Math.hypot(dx, dy, dz);
   if (dist < 0.1) return;
-
-  const geo = isFireball
-    ? new THREE.BoxGeometry(0.3, 0.3, 0.3)
-    : new THREE.BoxGeometry(0.08, 0.08, 0.5);
+  const geo = isFireball ? new THREE.BoxGeometry(0.3, 0.3, 0.3) : new THREE.BoxGeometry(0.08, 0.08, 0.5);
   const color = isFireball ? 0xff6020 : 0xc8b090;
   const mat = new THREE.MeshLambertMaterial({
     color: color,
@@ -3502,7 +3761,6 @@ function shootArrow(fx, fy, fz, tx, ty, tz, speed, isFireball) {
   mesh.position.set(fx, fy, fz);
   mesh.lookAt(tx, ty, tz);
   scene.add(mesh);
-
   arrows.push({
     mesh,
     vx: dx / dist * speed,
@@ -3528,7 +3786,7 @@ function updateArrows(dt) {
     if (Math.hypot(dx, dy, dz) < 0.8) {
       damagePlayer(a.damage || 4, a.isFireball ? 'fireball' : 'arrow');
       remove = true;
-    }else {
+    } else {
       const b = getBlock(Math.floor(a.mesh.position.x), Math.floor(a.mesh.position.y), Math.floor(a.mesh.position.z));
       if (b !== 0 && !(BLOCKS[b] && BLOCKS[b].solid === false)) remove = true;
       if (a.life <= 0) remove = true;
@@ -3600,13 +3858,11 @@ function updateMob(m, dt) {
       else if (distToPlayer > 10) { moveX = dx / distToPlayer; moveZ = dz / distToPlayer; }
       m.arrowCooldown -= dt * 60;
       if (m.arrowCooldown <= 0) {
-        // Dragons spit fireballs; skeletons shoot arrows
         const isFire = (m.type === 'dragon');
         shootArrow(head.x, head.y, head.z, player.pos.x, player.pos.y + player.height * 0.6, player.pos.z, def.arrowSpeed, isFire);
         m.arrowCooldown = def.rangedCooldown;
       }
     }
-
   } else if (def.hops && distToPlayer < 16) {
     const head = new THREE.Vector3(m.pos.x, m.pos.y + def.size.h, m.pos.z);
     const ph = new THREE.Vector3(player.pos.x, player.pos.y + player.height * 0.7, player.pos.z);
@@ -3645,14 +3901,12 @@ function updateMob(m, dt) {
   const mz = moveZ * speed * dt + (m.vz || 0) * dt;
 
   if (def.swims) {
-    // Stay underwater: if outside water, move down; else wander
     const inWater = getBlock(Math.floor(m.pos.x), Math.floor(m.pos.y), Math.floor(m.pos.z)) === 11;
     if (!inWater) {
       m.pos.y -= speed * dt;
     } else {
       m.pos.x += moveX * speed * dt;
       m.pos.z += moveZ * speed * dt;
-      // Gentle bobbing to stay near current depth
       m.pos.y += Math.sin(performance.now() * 0.001 + m.walkPhase) * speed * 0.1 * dt;
       if (m.pos.y < 1) m.pos.y = 1;
       if (m.pos.y > SEA_LEVEL) m.pos.y = SEA_LEVEL - 1;
@@ -3661,7 +3915,7 @@ function updateMob(m, dt) {
       m.yaw = Math.atan2(-moveX, -moveZ);
       m.model.rotation.y = m.yaw;
     }
-    return;   // skip normal AI for swimmers
+    return;
   }
 
   if (def.flies) {
@@ -3682,7 +3936,6 @@ function updateMob(m, dt) {
     else { if (m.vel.y < 0) m.onGround = true; m.vel.y = 0; }
   }
 
-    // hostile melee contact
   if (def.hostile && !def.ranged && !def.explodes && !def.hops) {
     if (Math.hypot(player.pos.x - m.pos.x, player.pos.z - m.pos.z) < 1.2 &&
         Math.abs(player.pos.y - m.pos.y) < 2 && m.hurtCooldown <= 0) {
@@ -3718,6 +3971,8 @@ function updateMob(m, dt) {
 addEventListener('mousedown', function (e) {
   if (document.pointerLockElement !== renderer.domElement) return;
   if (e.button !== 0) return;
+  if (invOpen) return;
+  if (typeof gamePaused !== 'undefined' && gamePaused) return;
   const origin = new THREE.Vector3(player.pos.x, player.pos.y + player.height * player.eyeHeight, player.pos.z);
   const dir = new THREE.Vector3(
     -Math.sin(player.yaw) * Math.cos(player.pitch),
@@ -3797,12 +4052,14 @@ function rescanTorches() {
   }
   for (const key of Array.from(torchLights.keys())) if (!wanted.has(key)) removeTorchLight(key);
 }
-setInterval(function () { if (!invOpen) rescanTorches(); }, 1000);
+setInterval(function () { if (!invOpen && !gamePaused) rescanTorches(); }, 1000);
 
 // Bed and torch placement
 addEventListener('mousedown', function (e) {
   if (document.pointerLockElement !== renderer.domElement) return;
   if (e.button !== 2) return;
+  if (invOpen) return;
+  if (typeof gamePaused !== 'undefined' && gamePaused) return;
   const slot = inventory[selectedSlot];
   if (!slot) return;
   const item = slot.item;
@@ -3825,16 +4082,19 @@ addEventListener('mousedown', function (e) {
     addTorchLight(px, py, pz);
     toast('Torch placed');
   }
+  if (typeof gameState !== 'undefined' && gameState.creative) return;
   slot.count -= 1;
   if (slot.count <= 0) inventory[selectedSlot] = null;
   refreshHotbarUI();
   updateHeldItemMesh();
-});
+}, true);
 
 // Sleep in bed
 addEventListener('mousedown', function (e) {
   if (document.pointerLockElement !== renderer.domElement) return;
   if (e.button !== 2) return;
+  if (invOpen) return;
+  if (typeof gamePaused !== 'undefined' && gamePaused) return;
   const slot = inventory[selectedSlot];
   if (slot && (slot.item === 'bed' || slot.item === 'torch')) return;
   const result = pickBlock();
@@ -3847,7 +4107,7 @@ addEventListener('mousedown', function (e) {
   bedSpawnPoint = { x: result.hit.x + 0.5, y: result.hit.y + 1, z: result.hit.z + 0.5 };
   try { localStorage.setItem(SPAWN_KEY, JSON.stringify(bedSpawnPoint)); } catch (e) {}
   toast('Spawn point set');
-});
+}, true);
 
 // ============================================================
 // DAY / NIGHT
@@ -3860,9 +4120,6 @@ let dayT = 0.5;
 
 // ============================================================
 // SAVE / LOAD
-// ============================================================
-// ============================================================
-// SAVE / LOAD — v3 (chunk-diff format)
 // ============================================================
 const SAVE_KEY = 'miniterra3d.save.v3';
 const INV_KEY = 'miniterra3d.inventory.v3';
@@ -3925,7 +4182,6 @@ function loadWorld() {
     if (data.v !== 3) { toast('Save is from an older version — cannot load'); return; }
     if (data.seed !== undefined) seed = data.seed;
 
-    // Wipe world
     for (const key of Object.keys(chunkMeshes)) {
       const [cx, cz] = key.split(',').map(Number);
       unloadChunkMesh(cx, cz);
@@ -3933,7 +4189,6 @@ function loadWorld() {
     chunks.clear();
     modifiedChunks.clear();
 
-    // Restore player
     if (data.player) {
       player.pos.set(data.player.x, data.player.y, data.player.z);
       player.yaw = data.player.yaw || 0;
@@ -3941,7 +4196,6 @@ function loadWorld() {
       player.vel.set(0, 0, 0);
     }
 
-    // Restore modified chunks (generate first, then overwrite)
     const mods = data.modified || {};
     for (const key of data.modifiedList || []) {
       const [cx, cz] = key.split(',').map(Number);
@@ -3951,7 +4205,6 @@ function loadWorld() {
       modifiedChunks.add(key);
     }
 
-    // Inventory
     const invRaw = localStorage.getItem(INV_KEY);
     if (invRaw) {
       const arr = JSON.parse(invRaw);
@@ -3960,7 +4213,6 @@ function loadWorld() {
       }
     }
 
-    // Stats
     const statsRaw = localStorage.getItem(STATS_KEY);
     if (statsRaw) {
       try {
@@ -3971,7 +4223,6 @@ function loadWorld() {
       } catch (e) {}
     }
 
-    // Reset streaming
     lastPlayerChunkX = -9999;
     lastPlayerChunkZ = -9999;
     updateChunkStreaming();
@@ -3985,8 +4236,8 @@ addEventListener('keydown', function (e) {
   if (e.ctrlKey || e.metaKey) return;
   if (e.target.tagName === 'INPUT') return;
   if (e.code === 'KeyO') saveWorld();
-  if (e.code === 'KeyP') loadWorld();
 });
+// Note: P is pause, so load is only accessible from the pause menu.
 
 addEventListener('beforeunload', function () {
   try {
@@ -4044,36 +4295,271 @@ scene.add(highlightBox);
   });
 })();
 
+
+// ============================================================
+// GAME STATE + MENUS
+// ============================================================
+const gameState = {
+  creative: false,
+  god: false,
+  flight: false,
+  noclip: false,
+  instantBreak: true,
+  alwaysDay: false,
+  alwaysNight: false,
+  showDebugHud: false,
+  showPosition: true,
+  timeLocked: false,
+  speedMult: 1,
+  fov: 75,
+  sensitivity: 10,
+  renderDistance: RENDER_DISTANCE,
+};
+
+let gamePaused = false;
+
+const pauseMenuEl    = document.getElementById('pause-menu');
+const settingsMenuEl = document.getElementById('settings-menu');
+const debugMenuEl    = document.getElementById('debug-menu');
+const debugHudEl     = document.getElementById('debug-hud');
+const creativeBadgeEl = document.getElementById('creative-badge');
+
+// ---- Toggle switches ----
+function bindToggle(id, key, onChange) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('click', function () {
+    gameState[key] = !gameState[key];
+    el.classList.toggle('on', gameState[key]);
+    if (onChange) onChange(gameState[key]);
+    applyGameState();
+  });
+}
+
+function refreshMenuToggles() {
+  const map = {
+    'dbg-creative': 'creative',
+    'dbg-god':      'god',
+    'dbg-flight':   'flight',
+    'dbg-noclip':   'noclip',
+    'dbg-instant':  'instantBreak',
+    'dbg-day':      'alwaysDay',
+    'dbg-night':    'alwaysNight',
+    'dbg-hud':      'showDebugHud',
+    'set-showpos':  'showPosition',
+  };
+  for (const id in map) {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('on', !!gameState[map[id]]);
+  }
+  const t = document.getElementById('dbg-time');
+  if (t) { t.value = Math.round(dayT * 100); document.getElementById('dbg-time-val').textContent = dayT.toFixed(2); }
+  const s = document.getElementById('dbg-speed');
+  if (s) { s.value = gameState.speedMult; document.getElementById('dbg-speed-val').textContent = gameState.speedMult + '×'; }
+  const f = document.getElementById('set-fov');
+  if (f) { f.value = gameState.fov; document.getElementById('set-fov-val').textContent = gameState.fov + '°'; }
+  const sn = document.getElementById('set-sens');
+  if (sn) { sn.value = gameState.sensitivity; document.getElementById('set-sens-val').textContent = gameState.sensitivity; }
+  const rd = document.getElementById('set-render');
+  if (rd) { rd.value = gameState.renderDistance; document.getElementById('set-render-val').textContent = gameState.renderDistance; }
+}
+
+function applyGameState() {
+  if (gameState.creative) {
+    gameState.flight = true;
+    gameState.instantBreak = true;
+  }
+  if (creativeBadgeEl) creativeBadgeEl.classList.toggle('show', gameState.creative);
+  if (debugHudEl) debugHudEl.classList.toggle('show', gameState.showDebugHud);
+  camera.fov = gameState.fov;
+  camera.updateProjectionMatrix();
+  handCamera.fov = 50;
+  handCamera.updateProjectionMatrix();
+  refreshMenuToggles();
+}
+
+function openMenu(el) {
+  el.classList.add('open');
+  gamePaused = true;
+  if (document.pointerLockElement) document.exitPointerLock();
+  lockEl.style.display = 'none';
+  refreshMenuToggles();
+}
+function closeAllMenus() {
+  pauseMenuEl.classList.remove('open');
+  settingsMenuEl.classList.remove('open');
+  debugMenuEl.classList.remove('open');
+  gamePaused = false;
+  if (!health.dead) safeRequestPointerLock();
+}
+
+// ---- Wire up toggles ----
+bindToggle('dbg-creative', 'creative', function (v) {
+  if (v) toast('Creative mode ON — flight enabled, infinite blocks');
+  else { gameState.flight = false; toast('Creative mode OFF'); }
+});
+bindToggle('dbg-god',      'god');
+bindToggle('dbg-flight',   'flight', function (v) { toast('Flight ' + (v ? 'ON' : 'OFF')); });
+bindToggle('dbg-noclip',   'noclip', function (v) { toast('No-clip ' + (v ? 'ON' : 'OFF')); });
+bindToggle('dbg-instant',  'instantBreak');
+bindToggle('dbg-day',      'alwaysDay', function (v) {
+  if (v) gameState.alwaysNight = false;
+  refreshMenuToggles();
+});
+bindToggle('dbg-night',    'alwaysNight', function (v) {
+  if (v) gameState.alwaysDay = false;
+  refreshMenuToggles();
+});
+bindToggle('dbg-hud',      'showDebugHud');
+bindToggle('set-showpos',  'showPosition', function (v) {
+  const info = document.getElementById('info');
+  if (info) info.style.display = v ? 'block' : 'none';
+});
+
+// ---- Sliders ----
+const dbgTimeSlider = document.getElementById('dbg-time');
+if (dbgTimeSlider) dbgTimeSlider.addEventListener('input', function () {
+  dayT = this.value / 100;
+  document.getElementById('dbg-time-val').textContent = dayT.toFixed(2);
+});
+const dbgSpeedSlider = document.getElementById('dbg-speed');
+if (dbgSpeedSlider) dbgSpeedSlider.addEventListener('input', function () {
+  gameState.speedMult = +this.value;
+  document.getElementById('dbg-speed-val').textContent = gameState.speedMult + '×';
+});
+const setFovSlider = document.getElementById('set-fov');
+if (setFovSlider) setFovSlider.addEventListener('input', function () {
+  gameState.fov = +this.value;
+  document.getElementById('set-fov-val').textContent = gameState.fov + '°';
+  camera.fov = gameState.fov;
+  camera.updateProjectionMatrix();
+});
+const setSensSlider = document.getElementById('set-sens');
+if (setSensSlider) setSensSlider.addEventListener('input', function () {
+  gameState.sensitivity = +this.value;
+  document.getElementById('set-sens-val').textContent = gameState.sensitivity;
+});
+const setRenderSlider = document.getElementById('set-render');
+if (setRenderSlider) setRenderSlider.addEventListener('input', function () {
+  gameState.renderDistance = +this.value;
+  document.getElementById('set-render-val').textContent = gameState.renderDistance;
+  lastPlayerChunkX = -9999;
+  lastPlayerChunkZ = -9999;
+});
+
+// ---- Menu buttons ----
+document.addEventListener('click', function (e) {
+  const btn = e.target.closest('.menu-btn');
+  if (!btn) return;
+  const action = btn.dataset.action;
+  if (action === 'resume') {
+    closeAllMenus();
+  } else if (action === 'save') {
+    saveWorld();
+  } else if (action === 'load') {
+    loadWorld();
+    closeAllMenus();
+  } else if (action === 'settings') {
+    pauseMenuEl.classList.remove('open');
+    openMenu(settingsMenuEl);
+  } else if (action === 'debug') {
+    pauseMenuEl.classList.remove('open');
+    openMenu(debugMenuEl);
+  } else if (action === 'back') {
+    settingsMenuEl.classList.remove('open');
+    debugMenuEl.classList.remove('open');
+    openMenu(pauseMenuEl);
+  } else if (action === 'quit') {
+    if (confirm('Quit to title? Unsaved changes will be lost.')) location.reload();
+  }
+});
+
+// ---- Pointer lock loss → pause ----
+document.addEventListener('pointerlockchange', function () {
+  if (invOpen) return;
+  if (health.dead) return;
+  const locked = document.pointerLockElement === renderer.domElement;
+  if (!locked) {
+    if (!pauseMenuEl.classList.contains('open') &&
+        !settingsMenuEl.classList.contains('open') &&
+        !debugMenuEl.classList.contains('open')) {
+      openMenu(pauseMenuEl);
+    }
+  } else {
+    lockEl.style.display = 'none';
+  }
+});
+
+// ---- Esc closes menus (browser owns the pointer-lock part) ----
+addEventListener('keydown', function (e) {
+  if (e.code !== 'Escape') return;
+  if (invOpen) return;
+  if (health.dead) return;
+  if (pauseMenuEl.classList.contains('open') ||
+      settingsMenuEl.classList.contains('open') ||
+      debugMenuEl.classList.contains('open')) {
+    closeAllMenus();
+  }
+});
+
+// ---- P toggles pause menu (browser-safe alternative to Esc) ----
+addEventListener('keydown', function (e) {
+  if (e.code !== 'KeyP') return;
+  if (e.target.tagName === 'INPUT') return;
+  if (health.dead) return;
+  if (invOpen) return;
+
+  if (pauseMenuEl.classList.contains('open') ||
+      settingsMenuEl.classList.contains('open') ||
+      debugMenuEl.classList.contains('open')) {
+    closeAllMenus();
+  } else {
+    openMenu(pauseMenuEl);
+  }
+  e.preventDefault();
+});
+
+// ---- F3 toggles debug HUD ----
+addEventListener('keydown', function (e) {
+  if (e.code === 'F3') {
+    e.preventDefault();
+    gameState.showDebugHud = !gameState.showDebugHud;
+    if (debugHudEl) debugHudEl.classList.toggle('show', gameState.showDebugHud);
+    refreshMenuToggles();
+  }
+});
+
+applyGameState();
+
 // ============================================================
 // MAIN LOOP
 // ============================================================
-let lastT = performance.now();
-  // Update hand if the held item changed
-  const heldSlot = inventory[selectedSlot];
-  const heldKey = heldSlot ? heldSlot.item + ':' + heldSlot.count : null;
-  if (heldKey !== window._lastHeldKey) {
-    window._lastHeldKey = heldKey;
-    updateHeldItemMesh();
-  }
 const bob = { phase: 0, amount: 0 };
+let lastT = performance.now();
+
 function loop() {
   const now = performance.now();
   const dt = Math.min(0.05, (now - lastT) / 1000);
   lastT = now;
 
-
+  const simDt = gamePaused ? 0 : dt;
 
   // Day/night
-  dayT = (dayT + dt / DAY_LENGTH) % 1;
+  if (gameState.alwaysDay) {
+    dayT = 0.25;
+  } else if (gameState.alwaysNight) {
+    dayT = 0.75;
+  } else {
+    dayT = (dayT + simDt / DAY_LENGTH) % 1;
+  }
   const angle = (dayT - 0.25) * Math.PI * 2;
   const sunY = Math.sin(angle), sunX = Math.cos(angle);
-  // Sun follows player so shadow camera stays centered
   const px = player.pos.x, py = player.pos.y, pz = player.pos.z;
   sun.position.set(px + sunX * 80, py + sunY * 80, pz + 40);
   sun.target.position.set(px, py, pz);
   sun.target.updateMatrixWorld();
   sun.intensity = Math.max(0, sunY) * 1.0;
-  sun.castShadow = sunY > 0.05;      // only cast shadows during day
+  sun.castShadow = sunY > 0.05;
   ambientLight.intensity = 0.3 + Math.max(0, sunY) * 0.4;
   const dayFactor = Math.max(0, Math.min(1, (sunY + 0.3) / 1.3));
   const sunsetFactor = Math.max(0, 1 - Math.abs(sunY) * 3);
@@ -4081,20 +4567,25 @@ function loop() {
   c.lerpColors(skyNight, skyDay, dayFactor);
   c.lerp(skySunset, sunsetFactor * 0.5);
   scene.background = c;
-  scene.fog.color.copy(c);   // fog always matches the sky
+  scene.fog.color.copy(c);
 
-  if (!invOpen) {
+  // Held item refresh
+  const heldSlot = inventory[selectedSlot];
+  const heldKey = heldSlot ? heldSlot.item + ':' + heldSlot.count : null;
+  if (heldKey !== window._lastHeldKey) {
+    window._lastHeldKey = heldKey;
+    updateHeldItemMesh();
+  }
+
+  if (!invOpen && !gamePaused && !health.dead) {
     updatePhysics(dt);
     updateHealth(dt);
     checkFallDamage();
-          // Chunk streaming — only runs when player crosses a chunk boundary
     updateChunkStreaming();
 
-    // Spawn mobs
     spawnCounter++;
     if (spawnCounter > 20) { spawnCounter = 0; trySpawn(); }
 
-    // Update mobs
     for (let i = activeMobs.length - 1; i >= 0; i--) {
       const m = activeMobs[i];
       if (Math.hypot(m.pos.x - player.pos.x, m.pos.z - player.pos.z) > DESPAWN_DIST) {
@@ -4105,7 +4596,7 @@ function loop() {
     updateArrows(dt);
   }
 
-  // ---- Head bob ----
+  // Head bob
   const isMoving = player.sprinting ||
                    keys['KeyW'] || keys['KeyS'] || keys['KeyA'] || keys['KeyD'];
   if (isMoving && player.onGround) {
@@ -4118,9 +4609,8 @@ function loop() {
   const bobY = Math.sin(bob.phase * 2) * 0.05 * bob.amount;
   const bobX = Math.cos(bob.phase)     * 0.03 * bob.amount;
   const roll = Math.sin(bob.phase)     * 0.015 * bob.amount;
-    // Hand follows the same bob rhythm (amplified a bit for weight)
   handGroup.position.x =  bobX * 1.5;
-  handGroup.position.y = -bobY * 1.5;      // invert so it drops when camera rises
+  handGroup.position.y = -bobY * 1.5;
   handGroup.rotation.z =  roll * 1.5;
 
   const sinYaw = Math.sin(player.yaw), cosYaw = Math.cos(player.yaw);
@@ -4136,7 +4626,7 @@ function loop() {
   camera.rotation.y = player.yaw;
   camera.rotation.x = player.pitch;
   camera.rotation.z = roll;
-    updateStateIcon();
+  updateStateIcon();
 
   // Block highlight
   const result = pickBlock();
@@ -4150,11 +4640,29 @@ function loop() {
   const pi = document.getElementById('posinfo');
   if (pi) pi.textContent = Math.floor(player.pos.x) + ',' + Math.floor(player.pos.y) + ',' + Math.floor(player.pos.z);
 
-renderer.render(scene, camera);
-renderer.autoClear = false;
-renderer.clearDepth();
-renderer.render(handScene, handCamera);
-renderer.autoClear = true;
+  // Debug HUD
+  if (gameState.showDebugHud && debugHudEl) {
+    const rot = ((player.yaw * 180 / Math.PI) % 360 + 360) % 360;
+    const facing = ['S','SW','W','NW','N','NE','E','SE'][Math.round(rot / 45) % 8];
+    debugHudEl.textContent =
+      'MiniTerra 3D  ' + Math.round(1 / Math.max(0.001, dt)) + ' fps\n' +
+      'XYZ  ' + player.pos.x.toFixed(2) + ' / ' + player.pos.y.toFixed(2) + ' / ' + player.pos.z.toFixed(2) + '\n' +
+      'Chunk ' + toChunkCoord(player.pos.x) + ', ' + toChunkCoord(player.pos.z) + '\n' +
+      'Facing ' + facing + ' (' + rot.toFixed(0) + '°)\n' +
+      'Day T ' + dayT.toFixed(3) + '\n' +
+      'Mobs ' + activeMobs.length + '\n' +
+      'HP ' + health.hp.toFixed(1) + '  Hunger ' + hunger.value.toFixed(1) + '  O2 ' + oxygen.value.toFixed(1) + '\n' +
+      'Mode ' + (gameState.creative ? 'CREATIVE' : 'SURVIVAL') +
+        (gameState.god ? ' +GOD' : '') +
+        (gameState.flight ? ' +FLY' : '') +
+        (gameState.noclip ? ' +NOCLIP' : '');
+  }
+
+  renderer.render(scene, camera);
+  renderer.autoClear = false;
+  renderer.clearDepth();
+  renderer.render(handScene, handCamera);
+  renderer.autoClear = true;
   requestAnimationFrame(loop);
 }
 
