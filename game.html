@@ -3574,7 +3574,7 @@ function loop() {
   const sunY = Math.sin(angle), sunX = Math.cos(angle);
   // Sun follows player so shadow camera stays centered
   const px = player.pos.x, py = player.pos.y, pz = player.pos.z;
-  sun.position.set(px + sunX * 200, py + sunY * 200, pz + 100);
+  sun.position.set(px + sunX * 80, py + sunY * 80, pz + 40);
   sun.target.position.set(px, py, pz);
   sun.target.updateMatrixWorld();
   sun.intensity = Math.max(0, sunY) * 1.0;
