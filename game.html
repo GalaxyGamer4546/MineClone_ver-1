@@ -313,7 +313,7 @@
 // CONFIG
 // ============================================================
 const CHUNK_SIZE = 16;
-const WORLD_H = 64;
+const WORLD_H = 160;
 const SEA_LEVEL = 20;
 const RENDER_DISTANCE = 3;
 const UNLOAD_MARGIN = 2;
@@ -359,6 +359,13 @@ const BLOCKS = {
   31: { name: 'dark_log',     color: 0x3a2818 },
   32: { name: 'dark_planks',  color: 0x5a3a20 },
   33: { name: 'dark_leaves',  color: 0x2a5020, transparent: true },
+  34: { name: 'coral',      color: 0xff6080 },
+  35: { name: 'coral_fan',  color: 0xff9060 },
+  36: { name: 'kelp',       color: 0x2a6a40, transparent: true, solid: false },
+  37: { name: 'kelp_top',   color: 0x3a8a50, transparent: true, solid: false },
+  38: { name: 'coral_tube',     color: 0xff4060 },
+  39: { name: 'coral_branch',   color: 0xff8040 },
+  40: { name: 'coral_brain',    color: 0xc060ff },
 };
 
 const HARDNESS = {
@@ -367,6 +374,7 @@ const HARDNESS = {
   16:3.0, 17:5.0, 18:7.0, 19:9.0, 20:1.0, 21:0.1,
   22:1.5, 23:1.5, 24:0.3, 25:1.5, 26:1.5, 27:0.3,
   28:1.5, 29:1.5, 30:0.3, 31:1.5, 32:1.5, 33:0.3,
+  34:0.4, 35:0.4, 36:0.1, 37:0.1, 38:0.4, 39:0.4, 40:0.4,
 };
 for (const id in HARDNESS) if (BLOCKS[id]) BLOCKS[id].hardness = HARDNESS[id];
 
@@ -507,12 +515,38 @@ const MOBS = {
     bodyColor: 0x8a2028, headColor: 0xa03038, legColor: 0x601818, model: 'dragon' },
   fish: { name: 'Fish', hp: 3, speed: 0.10, size: { w: 0.4, h: 0.3, d: 0.6 },
     passive: true, swims: true, spawnLight: 'any', spawnWater: true,
+    spawnBiome: [0, 2, 1],   // OCEAN_SHALLOW, REEF, OCEAN_DEEP
     drops: [{ item: 'raw_chicken', min: 1, max: 1 }],
     bodyColor: 0xe08040, headColor: 0xf0a060, legColor: 0xc06030, model: 'fish' },
   squid: { name: 'Squid', hp: 10, speed: 0.06, size: { w: 0.6, h: 0.8, d: 0.6 },
     passive: true, swims: true, spawnLight: 'any', spawnWater: true,
+    spawnBiome: [1, 0],   // OCEAN_DEEP, OCEAN_SHALLOW
     drops: [{ item: 'slimeball', min: 0, max: 2 }],
     bodyColor: 0x6060b0, headColor: 0x7070c0, legColor: 0x5050a0, model: 'squid' },
+      tropical_fish: {
+    name: 'Tropical Fish', hp: 3, speed: 0.08,
+    size: { w: 0.4, h: 0.3, d: 0.5 },
+    passive: true, swims: true, spawnLight: 'any', spawnWater: true,
+    spawnBiome: [2, 0],   // REEF, OCEAN_SHALLOW
+    drops: [{ item: 'raw_chicken', min: 1, max: 1 }],
+    bodyColor: 0xff6080, headColor: 0xffa060, legColor: 0xd04060, model: 'tropical_fish'
+  },
+  turtle: {
+    name: 'Turtle', hp: 10, speed: 0.04,
+    size: { w: 0.7, h: 0.5, d: 0.9 },
+    passive: true, swims: true, spawnLight: 'any', spawnWater: true,
+    spawnBiome: [0, 2],   // OCEAN_SHALLOW, REEF
+    drops: [{ item: 'slimeball', min: 1, max: 2 }, { item: 'bone', min: 0, max: 1 }],
+    bodyColor: 0x50b070, headColor: 0x60c080, legColor: 0x409060, model: 'turtle'
+  },
+  shark: {
+    name: 'Shark', hp: 20, speed: 0.09,
+    size: { w: 0.8, h: 0.7, d: 1.5 },
+    hostile: true, damage: 5, swims: true,
+    spawnLight: 'any', spawnWater: true,
+    spawnBiome: [1, 0],   // OCEAN_DEEP, OCEAN_SHALLOW
+    drops: [{ item: 'raw_beef', min: 2, max: 3 }],
+    bodyColor: 0x505060, headColor: 0x606070, legColor: 0x404050, model: 'shark'},
 };
 
 // ============================================================
@@ -634,27 +668,171 @@ function ridged(x, y) {
 }
 
 // ============================================================
+// BIOMES
+// ============================================================
+const BIOME = {
+  OCEAN_SHALLOW: 0,
+  OCEAN_DEEP:    1,
+  REEF:          2,
+  BEACH:         3,
+  PLAINS:        4,
+  FOREST:        5,
+  TAIGA:         6,
+  CHERRY_GROVE:  7,
+  DESERT:        8,
+  SAVANNA:       9,
+  MOUNTAINS:    10,
+  SNOWY_PEAKS:  11,
+  SWAMP:        12,
+  SEA_STACK:    13,
+};
+
+function temperatureAt(x, z) {
+  return fbm(x * 0.0006 + 3000, z * 0.0006 + 3000);
+}
+
+function humidityAt(x, z) {
+  return fbm(x * 0.0009 + 6000, z * 0.0009 + 6000);
+}
+
+
+// ============================================================
+// BIOME CLASSIFIER
+// ============================================================
+function biomeAt(x, z, h) {
+  const temp = temperatureAt(x, z);
+  const humid = humidityAt(x, z);
+
+  // ---- Ocean biomes ----
+  if (h <= SEA_LEVEL) {
+    // Sea stacks: isolated rock spires rising from the ocean floor
+    const stackNoise = fbm(x * 0.015 + 55000, z * 0.015 + 55000);
+    if (stackNoise > 0.72) return BIOME.SEA_STACK;
+
+    const depth = SEA_LEVEL - h;
+    const reefNoise = fbm(x * 0.02 + 9000, z * 0.02 + 9000);
+    if (depth <= 6 && temp > 0.55 && reefNoise > 0.55) return BIOME.REEF;
+    if (depth <= 10) return BIOME.OCEAN_SHALLOW;
+    return BIOME.OCEAN_DEEP;
+  }
+
+  // ---- Beach: just above sea level ----
+  if (h <= SEA_LEVEL + 2) return BIOME.BEACH;
+
+  // ---- Mountains override temp/humidity ----
+  if (h > SEA_LEVEL + 75) return BIOME.SNOWY_PEAKS;
+  if (h > SEA_LEVEL + 45) return BIOME.MOUNTAINS;
+
+  // ---- Swamp: warm + very humid + low elevation ----
+  if (temp > 0.55 && humid > 0.7 && h < SEA_LEVEL + 8) return BIOME.SWAMP;
+
+  // ---- Cold zones ----
+  if (temp < 0.35) {
+    if (humid > 0.5) return BIOME.TAIGA;
+    return BIOME.PLAINS;
+  }
+
+  // ---- Desert ----
+  if (temp > 0.65 && humid < 0.35) return BIOME.DESERT;
+
+  // ---- Savanna ----
+  if (temp > 0.6 && humid < 0.55) return BIOME.SAVANNA;
+
+  // ---- Cherry grove ----
+  const cherryNoise = fbm(x * 0.005 + 12000, z * 0.005 + 12000);
+  if (temp > 0.5 && humid > 0.55 && cherryNoise > 0.62) return BIOME.CHERRY_GROVE;
+
+  // ---- Forest ----
+  if (humid > 0.5) return BIOME.FOREST;
+
+  // ---- Default ----
+  return BIOME.PLAINS;
+}
+
+// ============================================================
+// OCEAN FLOOR DETAIL
+// ============================================================
+
+function oceanFloorOffset(x, z) {
+  // Big rolling hills on the seafloor
+  const hills = (fbm(x * 0.012 + 40000, z * 0.012 + 40000) - 0.5) * 12;
+
+  // Small pits and ripples
+  const ripples = (fbm(x * 0.06 + 41000, z * 0.06 + 41000) - 0.5) * 4;
+
+  // Occasional deep crevasses
+  const crevasseNoise = fbm(x * 0.02 + 42000, z * 0.02 + 42000);
+  let crevasse = 0;
+  if (crevasseNoise < 0.35) {
+    const t = (0.35 - crevasseNoise) / 0.15;
+    crevasse = -Math.min(1, t) * 18;
+  }
+
+  return hills + ripples + crevasse;
+}
+
+function seaStackLift(x, z) {
+  const stackNoise = fbm(x * 0.015 + 55000, z * 0.015 + 55000);
+  if (stackNoise < 0.72) return 0;
+
+  const t = Math.min(1, (stackNoise - 0.72) / 0.28);
+  const peakLift = Math.pow(t, 1.8) * 25;
+  const baseLift = Math.pow(t, 1.2) * 15;
+  return peakLift + baseLift;
+}
+
+// ============================================================
 // TERRAIN GENERATION
 // ============================================================
+
 function mountainMask(x, z) {
-  const m = fbm(x * 0.0035 + 500, z * 0.0035 + 500);
-  return Math.max(0, Math.min(1, (m - 0.5) * 5));
+  // Continental scale — WHERE mountain ranges form.
+  // Lower threshold (0.30) and bigger multiplier (6.0) so ranges are common.
+  const c = fbm(x * 0.0008 + 900, z * 0.0008 + 900);
+  const continent = Math.max(0, Math.min(1, (c - 0.30) * 6.0));
+
+  // Regional scale — variation inside a range.
+  const r = fbm(x * 0.0035 + 500, z * 0.0035 + 500);
+  const regional = Math.max(0, Math.min(1, (r - 0.35) * 3.5));
+
+  // Combine, ensuring a floor of 0.4 so if you're in a mountain region,
+  // you actually get mountains.
+  return continent * (0.6 + 0.4 * regional);
 }
 
 function surfaceHeight(x, z) {
+  const cont = fbm(x * 0.0012 + 2000, z * 0.0012 + 2000);
+  const contBias = (cont - 0.5) * 90 - Math.max(0, 0.5 - cont) * 240;
+
   const n     = fbm(x * 0.02,  z * 0.02);
   const hills = fbm(x * 0.008 + 100, z * 0.008 + 100);
-  const base  = SEA_LEVEL + (n - 0.5) * 6 + (hills - 0.5) * 10;
+  const detail = (n - 0.5) * 5 + (hills - 0.5) * 8;
 
+  let base = SEA_LEVEL + contBias + detail;
+
+  // Mountains (only on land)
   const mask = mountainMask(x, z);
-  let mountainLift = 0;
   if (mask > 0) {
-    const ridge = ridged(x * 0.012 + 200, z * 0.012 + 200);
-    mountainLift = Math.pow(ridge, 1.6) * mask * mask * 45;
-    mountainLift += mask * 6;
+    const ridgeBig  = ridged(x * 0.006 + 200, z * 0.006 + 200);
+    const ridgeFine = ridged(x * 0.018 + 400, z * 0.018 + 400);
+    const ridge = ridgeBig * 0.7 + ridgeFine * 0.3;
+    let mountainLift = ridge * mask * 160;
+    mountainLift += mask * 12;
+    const oceanSuppress = Math.max(0, Math.min(1, (cont - 0.42) * 8));
+    base += mountainLift * oceanSuppress;
   }
 
-  return Math.floor(base + mountainLift);
+  // Ocean floor detail (only near/below sea level)
+  if (base < SEA_LEVEL + 2) {
+    const off = oceanFloorOffset(x, z);
+    const strength = Math.min(1, Math.max(0, (SEA_LEVEL + 2 - base) / 12));
+    base += off * strength;
+  }
+
+  // Sea stacks (they pierce sea level, so this runs everywhere)
+  base += seaStackLift(x, z);
+
+  return Math.max(3, Math.min(WORLD_H - 5, Math.floor(base)));
 }
 
 // ============================================================
@@ -686,24 +864,42 @@ function pickSpecies(rand) {
 // CAVES + RAVINES
 // ============================================================
 function isCaveAt(x, y, z) {
-  if (y < 4 || y > WORLD_H - 4) return false;
-  const surf = surfaceHeight(x, z);
-  if (y > surf - 2) return false;
+  if (y < 2 || y > WORLD_H - 4) return false;
 
-  // Noodle caves — thin winding tunnels from two 3D noise fields
+  const surf = surfaceHeight(x, z);
+  // Above the surface: normally no caves. But underwater, caves can
+  // break through the seafloor — that's how water caves form.
+  if (y > surf - 2) {
+    if (surf > SEA_LEVEL) return false;         // land surface: normal rule
+    // Underwater: allow breaking through the floor as long as we're
+    // still below the water surface (y < SEA_LEVEL)
+    if (y > SEA_LEVEL) return false;
+    // Only allow breaking through if we're very close to the floor
+    // (prevents caves from chewing through the water layer itself)
+    if (y > surf + 3) return false;
+  }
+
+  // Deeper caves are larger — depth scaling
+  // At y=2 (near bedrock): scale 1.5 (lots of caves, big rooms)
+  // At y=100 (high underground): scale 0.5 (fewer caves, tighter tunnels)
+  const depthFactor = Math.max(0.5, Math.min(1.5, 1.5 - (y / 80) * 0.9));
+
+  // ---- Noodle caves (thin tunnels) ----
   const scale = 0.045;
   const n1 = fbm3(x * scale, y * scale * 1.4, z * scale, 3);
   const n2 = fbm3((x + 1000) * scale, y * scale * 1.4, (z + 1000) * scale, 3);
   const d1 = Math.abs(n1 - 0.5);
   const d2 = Math.abs(n2 - 0.5);
-  if (d1 < 0.035 && d2 < 0.035) return true;
+  if (d1 < 0.035 * depthFactor && d2 < 0.035 * depthFactor) return true;
 
-  // Cheese caves — larger blobby voids
+  // ---- Cheese caves (larger blobby voids) — deeper is bigger ----
   const cheese = fbm3(x * 0.018 + 200, y * 0.025, z * 0.018 + 200, 3);
-  if (cheese > 0.72) return true;
+  const cheeseThreshold = 0.72 - (depthFactor - 1.0) * 0.15;
+  if (cheese > cheeseThreshold) return true;
 
   return false;
 }
+
 
 function isRavineAt(x, y, z) {
   if (y < 8 || y > WORLD_H - 4) return false;
@@ -721,7 +917,7 @@ function isRavineAt(x, y, z) {
       const dirAngle = hash2(cx * 23 + 9, cz * 3 + 11) * Math.PI * 2;
       const length = 60 + hash2(cx * 5 + 21, cz * 13 + 3) * 80;
       const width = 2.5 + hash2(cx * 19 + 5, cz * 29 + 7) * 2.5;
-      const depth = 22 + hash2(cx * 3 + 27, cz * 11 + 5) * 18;
+      const depth = 40 + hash2(cx * 3 + 27, cz * 11 + 5) * 60;
 
       const dx = x - startX;
       const dz = z - startZ;
@@ -739,7 +935,7 @@ function isRavineAt(x, y, z) {
       );
       const endTaper = Math.min(1, along / 12) * Math.min(1, (length - along) / 12);
       const topY = surfY + 1;
-      const bottomY = Math.max(8, surfY - depth * endTaper);
+      const bottomY = Math.max(3, surfY - depth * endTaper);
 
       if (y >= bottomY && y <= topY) {
         const yT = (y - bottomY) / Math.max(1, topY - bottomY);
@@ -754,32 +950,176 @@ function isRavineAt(x, y, z) {
 // ============================================================
 // CHUNK GENERATION
 // ============================================================
-function generateChunk(cx, cz, data) {
+
+  function generateChunk(cx, cz, data) {
   const baseX = cx * CHUNK_SIZE;
   const baseZ = cz * CHUNK_SIZE;
 
-  // ---- 1) Terrain (with mountains) ----
+  // ---- 1) Terrain (with mountains and biomes) ----
   for (let lx = 0; lx < CHUNK_SIZE; lx++) {
     for (let lz = 0; lz < CHUNK_SIZE; lz++) {
       const wx = baseX + lx;
       const wz = baseZ + lz;
       const h = surfaceHeight(wx, wz);
+      const biome = biomeAt(wx, wz, h);
+
+      // Decide surface + subsurface blocks based on biome
+      let surfaceBlock = 1;   // default grass
+      let subBlock = 2;       // default dirt
+
+      if (biome === BIOME.SEA_STACK) {
+        // Sea stacks are bare rock top to bottom
+        surfaceBlock = 3;
+        subBlock = 3;
+      } else if (h <= SEA_LEVEL) {
+        // Underwater floor — mix sand, gravel, and cobble by depth + noise
+        const depth = SEA_LEVEL - h;
+
+        if (biome === BIOME.REEF) {
+          surfaceBlock = 6;   // reefs are sandy
+          subBlock = 6;
+        } else if (depth <= 4) {
+          // Very shallow: mostly sand (beach shelf)
+          surfaceBlock = 6;
+          subBlock = 6;
+        } else if (depth <= 10) {
+          // Mid shelf: sand with gravel patches
+          const gravelNoise = fbm(wx * 0.15 + 50000, wz * 0.15 + 50000);
+          if (gravelNoise > 0.55) {
+            surfaceBlock = 15;   // gravel (cobble)
+            subBlock = 15;
+          } else {
+            surfaceBlock = 6;
+            subBlock = 6;
+          }
+        } else if (depth <= 22) {
+          // Deep: gravel-dominant with sand pockets
+          const sandNoise = fbm(wx * 0.12 + 51000, wz * 0.12 + 51000);
+          if (sandNoise > 0.6) {
+            surfaceBlock = 6;
+            subBlock = 6;
+          } else {
+            surfaceBlock = 15;
+            subBlock = 15;
+          }
+        } else {
+          // Abyssal: cobble (bare rock)
+          surfaceBlock = 15;
+          subBlock = 3;
+        }
+      } else {
+        // Land biomes
+        switch (biome) {
+          case BIOME.BEACH:
+            surfaceBlock = 6; subBlock = 6; break;   // sand
+          case BIOME.DESERT:
+            surfaceBlock = 6; subBlock = 6; break;   // sand
+          case BIOME.SAVANNA:
+            surfaceBlock = 1; subBlock = 2; break;   // dry grass
+          case BIOME.SNOWY_PEAKS:
+            surfaceBlock = 12; subBlock = 3; break;  // snow over stone
+          case BIOME.MOUNTAINS:
+            surfaceBlock = 3; subBlock = 3; break;   // bare rock
+          case BIOME.SWAMP:
+            surfaceBlock = 1; subBlock = 2; break;   // grass (water pools added later)
+          case BIOME.TAIGA:
+          case BIOME.CHERRY_GROVE:
+          case BIOME.FOREST:
+          case BIOME.PLAINS:
+          default:
+            surfaceBlock = 1; subBlock = 2; break;   // grass + dirt
+        }
+      }
+
       for (let y = 0; y < WORLD_H; y++) {
         let b = 0;
-        if (y === 0) b = 3;
-        else if (y < h - 4) b = 3;
-        else if (y < h) b = 2;
-        else if (y === h) {
-          if (h <= SEA_LEVEL) b = 6;
-          else if (h > SEA_LEVEL + 32) b = 3;
-          else b = 1;
+        if (y === 0) {
+          b = 3;   // bedrock
+        } else if (y < h - 4) {
+          // Fuzz transition: cobble becomes dominant as y decreases.
+          // At y >= 35: always stone. Below y=15: always cobble.
+          // Between: mixed by 3D noise.
+          let isCobble;
+          if (y >= 35) {
+            isCobble = false;
+          } else if (y <= 15) {
+            isCobble = true;
+          } else {
+            // 15..35 → gradually more cobble as y drops
+            const band = (35 - y) / 20;             // 0..1
+            const n = hash3(Math.floor(wx * 0.3), Math.floor(y * 0.5), Math.floor(wz * 0.3));
+            isCobble = n < band;                     // more likely as band → 1
+          }
+          b = isCobble ? 15 : 3;
+        } else if (y < h) {
+          b = subBlock;
+        } else if (y === h) {
+          b = surfaceBlock;
         }
         data[localIdx(lx, y, lz)] = b;
       }
     }
   }
 
-  // ---- 2) Water ----
+  // ---- 1b) Reef coral ----
+  for (let lx = 0; lx < CHUNK_SIZE; lx++) {
+    for (let lz = 0; lz < CHUNK_SIZE; lz++) {
+      const wx = baseX + lx;
+      const wz = baseZ + lz;
+      const h = surfaceHeight(wx, wz);
+      const biome = biomeAt(wx, wz, h);
+      if (biome !== BIOME.REEF) continue;
+
+      // Sprinkle coral on the reef floor
+      if (hash2(wx * 13 + 17, wz * 11 + 29) < 0.3) {
+        const y = h + 1;
+        if (y < WORLD_H) {
+          data[localIdx(lx, y, lz)] = hash2(wx, wz) < 0.5 ? 34 : 35;
+        }
+      }
+    }
+  }
+
+  // ---- 1c) Kelp forests ----
+  for (let lx = 0; lx < CHUNK_SIZE; lx++) {
+    for (let lz = 0; lz < CHUNK_SIZE; lz++) {
+      const wx = baseX + lx;
+      const wz = baseZ + lz;
+      const h = surfaceHeight(wx, wz);
+      const biome = biomeAt(wx, wz, h);
+
+      // Kelp grows in cold/temperate shallow water — not in reefs or deep ocean
+      if (biome !== BIOME.OCEAN_SHALLOW) continue;
+
+      // Temperature gate — colder water = more kelp
+      const temp = temperatureAt(wx, wz);
+      if (temp > 0.55) continue;
+
+      // Patchy kelp — only where kelp noise is high
+      const kelpNoise = fbm(wx * 0.04 + 70000, wz * 0.04 + 70000);
+      if (kelpNoise < 0.55) continue;
+
+      // Spawn density
+      if (hash2(wx * 7 + 3, wz * 11 + 5) > 0.35) continue;
+
+      // Find the seafloor and grow upward
+      const floorY = h + 1;
+      const maxKelpHeight = 15 + Math.floor(hash2(wx * 13, wz * 17) * 10);   // 15-25 tall
+      const topY = Math.min(SEA_LEVEL - 1, floorY + maxKelpHeight);
+
+      for (let y = floorY; y <= topY; y++) {
+        // Only place kelp if there's water here
+        if (data[localIdx(lx, y, lz)] !== 11) break;
+        if (y === topY) {
+          data[localIdx(lx, y, lz)] = 37;   // kelp_top
+        } else {
+          data[localIdx(lx, y, lz)] = 36;   // kelp
+        }
+      }
+    }
+  }
+
+  // ---- 2) Water — initial fill ----
   for (let lx = 0; lx < CHUNK_SIZE; lx++) {
     for (let lz = 0; lz < CHUNK_SIZE; lz++) {
       for (let y = 1; y <= SEA_LEVEL; y++) {
@@ -803,16 +1143,13 @@ function generateChunk(cx, cz, data) {
     }
   }
 
-  // ---- 4) Ravines ----
+  // ---- 4b) Re-fill water after caves/ravines ----
+  // Carves can open up underwater pockets — this fills them back in.
   for (let lx = 0; lx < CHUNK_SIZE; lx++) {
     for (let lz = 0; lz < CHUNK_SIZE; lz++) {
-      const wx = baseX + lx;
-      const wz = baseZ + lz;
-      for (let y = 1; y < WORLD_H - 1; y++) {
+      for (let y = 1; y <= SEA_LEVEL; y++) {
         const i = localIdx(lx, y, lz);
-        const b = data[i];
-        if (b === 0 || b === 11) continue;
-        if (isRavineAt(wx, y, wz)) data[i] = 0;
+        if (data[i] === 0) data[i] = 11;
       }
     }
   }
@@ -825,11 +1162,24 @@ function generateChunk(cx, cz, data) {
 }
 
 function scatterOresInChunk(cx, cz, data) {
+  // Each ore has a "depth curve" — a multiplier that grows as Y drops.
+  // Base count is multiplied by that curve to make ores more common deep.
   const ORE_STATS = [
-    { id: 16, count: 12, yMin: 5, yMax: 18, cluster: 6 },
-    { id: 17, count: 7,  yMin: 3, yMax: 15, cluster: 4 },
-    { id: 18, count: 2,  yMin: 1, yMax: 10, cluster: 3 },
-    { id: 19, count: 1,  yMin: 1, yMax: 6,  cluster: 3 },
+    // Coal: common everywhere, but slightly more at shallow depths (realistic)
+    { id: 16, count: 14, yMin: 5, yMax: 55, cluster: 6,
+      depthCurve: y => y > 35 ? 1.0 : 0.6 + (y / 35) * 0.4 },
+
+    // Iron: common mid-depth, peaks around y=20
+    { id: 17, count: 10, yMin: 3, yMax: 40, cluster: 4,
+      depthCurve: y => y > 30 ? 0.4 : Math.min(1.6, 0.4 + (30 - y) * 0.06) },
+
+    // Gold: rare up high, common down low
+    { id: 18, count: 4, yMin: 1, yMax: 20, cluster: 3,
+      depthCurve: y => Math.min(2.0, 0.3 + (20 - y) * 0.10) },
+
+    // Diamond: rarest overall, but very common near bedrock
+    { id: 19, count: 2, yMin: 1, yMax: 14, cluster: 3,
+      depthCurve: y => Math.min(2.5, 0.2 + (14 - y) * 0.20) },
   ];
 
   for (const stat of ORE_STATS) {
@@ -841,15 +1191,91 @@ function scatterOresInChunk(cx, cz, data) {
       const lz = Math.floor(r2 * CHUNK_SIZE);
       const y = stat.yMin + Math.floor(r3 * (stat.yMax - stat.yMin + 1));
 
-      for (let j = 0; j < stat.cluster; j++) {
-        const ox = lx + Math.floor(hash2(i * 5 + j, cx + stat.id) * 3) - 1;
-        const oy = y + Math.floor(hash2(i * 7 + j, cz + stat.id) * 3) - 1;
-        const oz = lz + Math.floor(hash2(i * 11 + j, cx + cz) * 3) - 1;
-        if (ox < 0 || ox >= CHUNK_SIZE || oy < 0 || oy >= WORLD_H || oz < 0 || oz >= CHUNK_SIZE) continue;
-        if (data[localIdx(ox, oy, oz)] === 3) data[localIdx(ox, oy, oz)] = stat.id;
+      // Depth multiplier — where in the y range this vein sits.
+      // 1.0 = full spawn chance. 2.0 = double chance (spawn additional veins).
+      const depthMul = stat.depthCurve(y);
+
+      // Base chance of a vein actually spawning.
+      // For depthMul < 1: skip some veins.
+      // For depthMul >= 1: always spawn, plus extra veins proportional to depthMul-1.
+      const spawnRoll = hash2(i * 3 + cx, i * 5 + cz);
+      if (depthMul < 1 && spawnRoll > depthMul) continue;
+
+      // Extra veins at high depthMul values
+      let veinMultiplier = 1;
+      if (depthMul >= 1) {
+        veinMultiplier = Math.floor(depthMul);
+        // Partial fraction spawns the (veinMultiplier + 1)th vein
+        const frac = depthMul - veinMultiplier;
+        if (spawnRoll < frac) veinMultiplier++;
+      }
+
+      for (let v = 0; v < veinMultiplier; v++) {
+        // Offset each extra vein slightly so they don't stack
+        const vOffX = v === 0 ? 0 : Math.floor(hash2(v * 7 + i, cx) * 8) - 4;
+        const vOffZ = v === 0 ? 0 : Math.floor(hash2(v * 11 + i, cz) * 8) - 4;
+
+        for (let j = 0; j < stat.cluster; j++) {
+          const ox = lx + vOffX + Math.floor(hash2(i * 5 + j, cx + stat.id) * 3) - 1;
+          const oy = y + Math.floor(hash2(i * 7 + j, cz + stat.id) * 3) - 1;
+          const oz = lz + vOffZ + Math.floor(hash2(i * 11 + j, cx + cz) * 3) - 1;
+          if (ox < 0 || ox >= CHUNK_SIZE || oy < 0 || oy >= WORLD_H || oz < 0 || oz >= CHUNK_SIZE) continue;
+          // Ore can replace both stone (3) and cobble (15)
+          const target = data[localIdx(ox, oy, oz)];
+          if (target === 3 || target === 15) data[localIdx(ox, oy, oz)] = stat.id;
+        }
       }
     }
   }
+}
+
+function pickSpeciesForBiome(biome, rand) {
+  let pool = null;
+
+  switch (biome) {
+    case BIOME.TAIGA:
+      pool = [TREE_SPECIES.pine, TREE_SPECIES.birch];
+      break;
+    case BIOME.CHERRY_GROVE:
+      pool = [TREE_SPECIES.cherry];
+      break;
+    case BIOME.FOREST:
+      pool = [TREE_SPECIES.oak, TREE_SPECIES.oak, TREE_SPECIES.birch, TREE_SPECIES.bigOak];
+      break;
+    case BIOME.SWAMP:
+      pool = [TREE_SPECIES.willow, TREE_SPECIES.oak];
+      break;
+    case BIOME.PLAINS:
+      pool = [TREE_SPECIES.oak, TREE_SPECIES.birch];
+      break;
+    case BIOME.SAVANNA:
+      pool = [TREE_SPECIES.oak];
+      break;
+    case BIOME.DESERT:
+    case BIOME.BEACH:
+    case BIOME.MOUNTAINS:
+    case BIOME.SNOWY_PEAKS:
+    case BIOME.SEA_STACK:
+    case BIOME.OCEAN_SHALLOW:
+    case BIOME.OCEAN_DEEP:
+    case BIOME.REEF:
+      return null;
+    default:
+      pool = [TREE_SPECIES.oak];
+  }
+
+  // Plains and savanna get sparser trees
+  if (biome === BIOME.PLAINS && rand > 0.4) return null;
+  if (biome === BIOME.SAVANNA && rand > 0.15) return null;
+
+  let total = 0;
+  for (const s of pool) total += s.weight;
+  let r = rand * total;
+  for (const s of pool) {
+    r -= s.weight;
+    if (r <= 0) return s;
+  }
+  return pool[0];
 }
 
 function placeTreesInChunk(cx, cz, data) {
@@ -871,62 +1297,24 @@ function placeTreesInChunk(cx, cz, data) {
       const tz = gz + oz;
       const th = surfaceHeight(tx, tz);
       if (th <= SEA_LEVEL) continue;
-      if (th > SEA_LEVEL + 32) continue;   // no trees on rocky peaks
-      const sp = pickSpecies(hash2(tx * 97 + 3, tz * 61 + 19));
+      if (th > SEA_LEVEL + 50) continue;
+
+      // Trunk must be in this chunk
+      const localTX = tx - baseX;
+      const localTZ = tz - baseZ;
+      const trunkInChunk = localTX >= 0 && localTX < CHUNK_SIZE
+                        && localTZ >= 0 && localTZ < CHUNK_SIZE;
+      if (!trunkInChunk) continue;
+
+      // Ground check
+      const groundBlock = data[localIdx(localTX, th, localTZ)];
+      if (groundBlock === 0 || groundBlock === 11) continue;
+
+      const biome = biomeAt(tx, tz, th);
+      const sp = pickSpeciesForBiome(biome, hash2(tx * 97 + 3, tz * 61 + 19));
+      if (!sp) continue;
+
       plantTreeIntoChunk(sp, tx, th + 1, tz, cx, cz, data);
-    }
-  }
-}
-
-function plantTreeIntoChunk(sp, cx0, groundY, cz0, cx, cz, data) {
-  const R = sp.radius;
-  const span = sp.trunkMax - sp.trunkMin + 1;
-  const trunkH = sp.trunkMin + Math.floor(hash2(cx0 * 17 + 3, cz0 * 23 + 11) * span);
-  if (groundY + trunkH + sp.layers + 2 >= WORLD_H) return;
-
-  const baseX = cx * CHUNK_SIZE;
-  const baseZ = cz * CHUNK_SIZE;
-
-  function writeCell(wx, wy, wz, id, onlyIfAirOrLeaves) {
-    if (wy < 0 || wy >= WORLD_H) return;
-    if (wx < baseX || wx >= baseX + CHUNK_SIZE) return;
-    if (wz < baseZ || wz >= baseZ + CHUNK_SIZE) return;
-    const i = localIdx(wx - baseX, wy, wz - baseZ);
-    const b = data[i];
-    if (onlyIfAirOrLeaves) {
-      if (b !== 0 && b !== 10) return;
-    } else {
-      if (b === 4 || b === 22 || b === 25 || b === 28 || b === 31) return;
-    }
-    data[i] = id;
-  }
-
-  for (let i = 0; i < trunkH; i++) writeCell(cx0, groundY + i, cz0, sp.log, false);
-
-  const canopyTopY = groundY + trunkH - 1;
-  const canopyBottomY = canopyTopY - Math.floor(sp.layers / 2);
-
-  for (let layer = 0; layer < sp.layers; layer++) {
-    const ly = canopyBottomY + layer;
-    let rad = R;
-    if (sp.taper) rad = Math.max(0, R - Math.floor((layer / sp.layers) * R));
-    for (let dx = -rad; dx <= rad; dx++) {
-      for (let dz = -rad; dz <= rad; dz++) {
-        if (dx === 0 && dz === 0) continue;
-        writeCell(cx0 + dx, ly, cz0 + dz, sp.leaves, true);
-      }
-    }
-  }
-
-  const topY = canopyBottomY + sp.layers;
-  const capRad = Math.max(0, R - 1);
-  for (let dx = -capRad; dx <= capRad; dx++) {
-    for (let dz = -capRad; dz <= capRad; dz++) {
-      if (dx === 0 && dz === 0) {
-        if (hash2(cx0 * 3, cz0 * 5) < 0.5) writeCell(cx0, topY, cz0, sp.leaves, true);
-        continue;
-      }
-      writeCell(cx0 + dx, topY, cz0 + dz, sp.leaves, true);
     }
   }
 }
@@ -936,7 +1324,7 @@ function plantTreeIntoChunk(sp, cx0, groundY, cz0, cx, cz, data) {
 // ============================================================
 const TILE_SIZE = 16;
 const TILES_PER_ROW = 8;
-const ATLAS_ROWS = Math.ceil(34 / TILES_PER_ROW);
+const ATLAS_ROWS = Math.ceil(41 / TILES_PER_ROW);
 const ATLAS_W = TILES_PER_ROW * TILE_SIZE;
 const ATLAS_H = ATLAS_ROWS * TILE_SIZE;
 
@@ -1270,6 +1658,111 @@ function drawDarkLeaves(id) {
   }
 }
 
+function drawCoral(id) {
+  const { x, y } = tileOrigin(id);
+  for (let i = 0; i < 16; i++) for (let j = 0; j < 16; j++) {
+    const n = tr(i, j, id);
+    let r = 240 + (n - 0.5) * 20, g = 90 + (n - 0.5) * 30, b = 120 + (n - 0.5) * 30;
+    if (n < 0.3) { r = 180; g = 60; b = 90; }
+    px(x, y, i, j, r, g, b);
+  }
+}
+function drawCoralFan(id) {
+  const { x, y } = tileOrigin(id);
+  for (let i = 0; i < 16; i++) for (let j = 0; j < 16; j++) {
+    const n = tr(i, j, id);
+    let r = 250 + (n - 0.5) * 20, g = 140 + (n - 0.5) * 30, b = 80 + (n - 0.5) * 30;
+    if (n < 0.3) { r = 220; g = 100; b = 50; }
+    px(x, y, i, j, r, g, b);
+    function drawKelp(id) {
+  const { x, y } = tileOrigin(id);
+  actx.clearRect(x, y, 16, 16);
+  for (let i = 6; i < 10; i++) for (let j = 0; j < 16; j++) {
+    const n = tr(i, j, id);
+    let r = 30 + (n - 0.5) * 15, g = 90 + (n - 0.5) * 25, b = 50 + (n - 0.5) * 15;
+    px(x, y, i, j, r, g, b);
+  }
+  // Leaves
+  for (let k = 0; k < 3; k++) {
+    const ly = 2 + k * 5;
+    const dir = k % 2 === 0 ? -1 : 1;
+    const lx = dir < 0 ? 4 : 10;
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) {
+      const n = tr(lx + i, ly + j, id + 5);
+      let r = 40 + (n - 0.5) * 20, g = 110 + (n - 0.5) * 30, b = 60 + (n - 0.5) * 20;
+      px(x, y, lx + i, ly + j, r, g, b);
+    }
+  }
+}
+function drawKelpTop(id) {
+  const { x, y } = tileOrigin(id);
+  actx.clearRect(x, y, 16, 16);
+  for (let i = 6; i < 10; i++) for (let j = 4; j < 16; j++) {
+    const n = tr(i, j, id);
+    let r = 30 + (n - 0.5) * 15, g = 90 + (n - 0.5) * 25, b = 50 + (n - 0.5) * 15;
+    px(x, y, i, j, r, g, b);
+  }
+  // Float bulb at top
+  for (let i = 5; i < 11; i++) for (let j = 0; j < 6; j++) {
+    const n = tr(i, j, id + 10);
+    const dist = Math.hypot(i - 8, j - 3);
+    if (dist < 3.5) {
+      let r = 60 + (n - 0.5) * 20, g = 160 + (n - 0.5) * 30, b = 80 + (n - 0.5) * 20;
+      px(x, y, i, j, r, g, b);
+
+      function drawCoralTube(id) {
+  const { x, y } = tileOrigin(id);
+  for (let i = 0; i < 16; i++) for (let j = 0; j < 16; j++) {
+    const n = tr(i, j, id);
+    let r = 255 + (n - 0.5) * 10, g = 60 + (n - 0.5) * 25, b = 90 + (n - 0.5) * 25;
+    px(x, y, i, j, r, g, b);
+  }
+  // Darker tube openings
+  for (const [ox, oy] of [[3, 3], [9, 5], [5, 9], [10, 10]]) {
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) {
+      const n = tr(ox + i, oy + j, id + 3);
+      let r = 120 + (n - 0.5) * 20, g = 25 + (n - 0.5) * 10, b = 45 + (n - 0.5) * 10;
+      px(x, y, ox + i, oy + j, r, g, b);
+    }
+  }
+}
+function drawCoralBranch(id) {
+  const { x, y } = tileOrigin(id);
+  actx.clearRect(x, y, 16, 16);
+  // Trunk
+  for (let i = 7; i < 10; i++) for (let j = 4; j < 16; j++) {
+    const n = tr(i, j, id);
+    let r = 230 + (n - 0.5) * 20, g = 110 + (n - 0.5) * 25, b = 50 + (n - 0.5) * 20;
+    px(x, y, i, j, r, g, b);
+  }
+  // Branches
+  for (let i = 3; i < 7; i++) for (let j = 4; j < 7; j++) {
+    const n = tr(i, j, id + 1);
+    px(x, y, i, j, 240 + (n - 0.5) * 20, 130 + (n - 0.5) * 25, 60 + (n - 0.5) * 20);
+  }
+  for (let i = 10; i < 14; i++) for (let j = 6; j < 9; j++) {
+    const n = tr(i, j, id + 2);
+    px(x, y, i, j, 240 + (n - 0.5) * 20, 130 + (n - 0.5) * 25, 60 + (n - 0.5) * 20);
+  }
+}
+function drawCoralBrain(id) {
+  const { x, y } = tileOrigin(id);
+  for (let i = 0; i < 16; i++) for (let j = 0; j < 16; j++) {
+    const n = tr(i, j, id);
+    let r = 180 + (n - 0.5) * 25, g = 90 + (n - 0.5) * 25, b = 240 + (n - 0.5) * 15;
+    // Brain-like ridges
+    const ridge = Math.sin(i * 1.3 + Math.sin(j * 0.7) * 2) * 0.5 + 0.5;
+    if (ridge > 0.6) { r -= 40; g -= 20; b -= 30; }
+    if (n < 0.08) { r += 30; g += 20; b += 15; }
+    px(x, y, i, j, r, g, b);
+  }
+}
+    }
+  }
+}
+  }
+}
+
 (function buildAtlas() {
   actx.fillStyle = '#ff00ff';
   actx.fillRect(0, 0, ATLAS_W, ATLAS_H);
@@ -1288,6 +1781,9 @@ function drawDarkLeaves(id) {
   drawPineLog(25); drawPinePlanks(26); drawPineLeaves(27);
   drawCherryLog(28); drawCherryPlanks(29); drawCherryLeaves(30);
   drawDarkLog(31); drawDarkPlanks(32); drawDarkLeaves(33);
+  drawCoral(34); drawCoralFan(35);
+  drawKelp(36); drawKelpTop(37);
+    drawCoralTube(38); drawCoralBranch(39); drawCoralBrain(40);
   console.log('[atlas] drew 34 tiles into', ATLAS_W + 'x' + ATLAS_H);
 })();
 
@@ -1804,6 +2300,7 @@ for (const id in BLOCKS) {
   if (n === 'glass') { opts.transparent = true; opts.opacity = 0.55; }
   if (n === 'water') { opts.transparent = true; opts.opacity = 0.75; }
   if (n.includes('leaves') || n === 'torch_block') { opts.alphaTest = 0.5; }
+  if (n.includes('kelp')) { opts.alphaTest = 0.5; opts.side = THREE.DoubleSide; }
   materials[id] = new THREE.MeshLambertMaterial(opts);
 }
 
@@ -2034,13 +2531,13 @@ addEventListener('keydown', e => {
 });
 addEventListener('keyup', e => keys[e.code] = false);
 addEventListener('keydown', e => {
-  if (e.code === 'ShiftRight' || e.code === 'ControlLeft' || e.code === 'KeyC') {
+  if (e.code === 'ShiftRight' || e.code === 'KeyX' || e.code === 'KeyC') {
     player.crouching = true;
     e.preventDefault();
   }
 });
 addEventListener('keyup', e => {
-  if (e.code === 'ShiftRight' || e.code === 'ControlLeft' || e.code === 'KeyC') {
+  if (e.code === 'ShiftRight' || e.code === 'KeyX' || e.code === 'KeyC') {
     player.crouching = false;
   }
 });
@@ -3630,6 +4127,58 @@ function buildSquidModel() {
   return g;
 }
 
+function buildTropicalFishModel() {
+  const g = new THREE.Group();
+  const d = MOBS.tropical_fish;
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.25, 0.45), mat6(d.bodyColor));
+  body.position.y = 0.25; g.add(body);
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.2, 0.2), mat6(d.headColor));
+  head.position.set(0, 0.25, -0.3); g.add(head);
+  const tail = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.35, 0.15), mat6(d.legColor));
+  tail.position.set(0, 0.25, 0.3); g.add(tail);
+  const fin = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.15, 0.25), mat6(0xffe080));
+  fin.position.set(0, 0.4, 0); g.add(fin);
+  return g;
+}
+function buildTurtleModel() {
+  const g = new THREE.Group();
+  const d = MOBS.turtle;
+  const shell = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.25, 0.9), mat6(0x6b4a2a));
+  shell.position.y = 0.4; g.add(shell);
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 0.25), mat6(d.headColor));
+  head.position.set(0, 0.4, -0.6); g.add(head);
+  const legs = [];
+  for (const [x, z] of [[-0.3, -0.3], [0.3, -0.3], [-0.3, 0.3], [0.3, 0.3]]) {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.1, 0.25), mat6(d.legColor));
+    leg.position.set(x, 0.25, z); g.add(leg); legs.push(leg);
+  }
+  const tail = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.15), mat6(d.headColor));
+  tail.position.set(0, 0.4, 0.55); g.add(tail);
+  g.userData.legs = legs;
+  return g;
+}
+function buildSharkModel() {
+  const g = new THREE.Group();
+  const d = MOBS.shark;
+  const body = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.6, 1.4), mat6(d.bodyColor));
+  body.position.y = 0.7; g.add(body);
+  const head = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.5, 0.4), mat6(d.headColor));
+  head.position.set(0, 0.7, -0.85); g.add(head);
+  const dorsal = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.4, 0.4), mat6(d.legColor));
+  dorsal.position.set(0, 1.15, 0); g.add(dorsal);
+  for (const s of [-1, 1]) {
+    const fin = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.06, 0.35), mat6(d.legColor));
+    fin.position.set(s * 0.55, 0.65, 0); g.add(fin);
+  }
+  const tailBase = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.5, 0.3), mat6(d.bodyColor));
+  tailBase.position.set(0, 0.7, 0.85); g.add(tailBase);
+  const tailTop = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.5, 0.35), mat6(d.legColor));
+  tailTop.position.set(0, 1.0, 1.05); g.add(tailTop);
+  const tailBot = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.3, 0.25), mat6(d.legColor));
+  tailBot.position.set(0, 0.5, 1.05); g.add(tailBot);
+  return g;
+}
+
 const MODEL_BUILDERS = {
   pig: buildPigModel, chicken: buildChickenModel, zombie: buildZombieModel,
   sheep: buildSheepModel, cow: buildCowModel, skeleton: buildSkeletonModel,
@@ -3637,6 +4186,9 @@ const MODEL_BUILDERS = {
   fox: buildFoxModel, wolf: buildWolfModel, rabbit: buildRabbitModel,
   parrot: buildParrotModel, dragon: buildDragonModel,
   fish: buildFishModel, squid: buildSquidModel,
+  tropical_fish: buildTropicalFishModel,
+  turtle: buildTurtleModel,
+  shark: buildSharkModel,
 };
 
 // ============================================================
@@ -3702,45 +4254,89 @@ function killMob(m) {
 
 function trySpawn() {
   if (activeMobs.length >= MAX_MOBS) return;
-  const types = Object.keys(MOBS);
-  const type = types[Math.floor(Math.random() * types.length)];
-  const def = MOBS[type];
 
-  const angle = Math.random() * Math.PI * 2;
-  const radius = 15 + Math.random() * 25;
-  const wx = Math.floor(player.pos.x + Math.cos(angle) * radius);
-  const wz = Math.floor(player.pos.z + Math.sin(angle) * radius);
-  const mcx = toChunkCoord(wx);
-  const mcz = toChunkCoord(wz);
-  if (!chunks.has(chunkKey(mcx, mcz))) return;
+  // Try up to 8 times to find a valid spawn
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const types = Object.keys(MOBS);
+    const type = types[Math.floor(Math.random() * types.length)];
+    const def = MOBS[type];
 
-  let spawnY = -1;
-  if (def.spawnWater) {
-    for (let y = WORLD_H - 2; y > 1; y--) {
-      const b = getBlock(wx, y, wz);
-      if (b !== 11) continue;
-      if (getBlock(wx, y + 1, wz) !== 11) continue;
-      spawnY = y; break;
+    // Per-type caps
+    if (type === 'shark') {
+      let count = 0;
+      for (const m of activeMobs) if (m.type === 'shark') count++;
+      if (count >= 3) continue;
     }
-    if (spawnY < 1) return;
-  } else {
-    for (let y = WORLD_H - 2; y > 1; y--) {
-      const b = getBlock(wx, y, wz);
-      if (b === 0) continue;
-      if (BLOCKS[b] && BLOCKS[b].solid === false) continue;
-      if (getBlock(wx, y + 1, wz) !== 0) continue;
-      spawnY = y + 1; break;
+    if (type === 'dragon') {
+      let count = 0;
+      for (const m of activeMobs) if (m.type === 'dragon') count++;
+      if (count >= 1) continue;
     }
-    if (spawnY < 1) return;
+    if (type === 'turtle') {
+      let count = 0;
+      for (const m of activeMobs) if (m.type === 'turtle') count++;
+      if (count >= 2) continue;
+    }
+
+    const angle = Math.random() * Math.PI * 2;
+    const radius = 15 + Math.random() * 25;
+    const wx = Math.floor(player.pos.x + Math.cos(angle) * radius);
+    const wz = Math.floor(player.pos.z + Math.sin(angle) * radius);
+    const mcx = toChunkCoord(wx);
+    const mcz = toChunkCoord(wz);
+    if (!chunks.has(chunkKey(mcx, mcz))) continue;
+
+    let spawnY = -1;
+
+    if (def.spawnWater) {
+      // Water mobs: find the water column and place them inside it
+      const h = surfaceHeight(wx, wz);
+      if (h >= SEA_LEVEL) continue;
+      const waterTop = SEA_LEVEL;
+      const waterBottom = h + 1;
+      const waterDepth = waterTop - waterBottom;
+      if (waterDepth < 2) continue;
+
+      // Deeper mobs spawn near the floor, shallower mobs near the top
+      const isDeep = def.spawnBiome && def.spawnBiome.includes(1);   // OCEAN_DEEP
+      const depthBias = isDeep ? 0.85 : 0.35;
+      spawnY = Math.round(waterBottom + waterDepth * depthBias);
+
+      // Verify it's actually water
+      if (getBlock(wx, spawnY, wz) !== 11) {
+        spawnY = waterBottom + 1;
+        if (getBlock(wx, spawnY, wz) !== 11) continue;
+      }
+    } else {
+      // Land mobs: find the ground surface
+      for (let y = WORLD_H - 2; y > 1; y--) {
+        const b = getBlock(wx, y, wz);
+        if (b === 0) continue;
+        if (BLOCKS[b] && BLOCKS[b].solid === false) continue;
+        if (getBlock(wx, y + 1, wz) !== 0) continue;
+        spawnY = y + 1;
+        break;
+      }
+      if (spawnY < 1) continue;
+    }
+
+    // Light check
+    const light = lightAt(wx, spawnY, wz);
+    if (def.spawnLight === 'day' && light < 0.7) continue;
+    if (def.spawnLight === 'dark' && light > 0.4) continue;
+    if (def.spawnSurface && !def.spawnWater && spawnY < SEA_LEVEL) continue;
+    if (def.spawnWater && spawnY > SEA_LEVEL) continue;
+
+    // Biome check
+    if (def.spawnBiome) {
+      const h = surfaceHeight(wx, wz);
+      const biome = biomeAt(wx, wz, h);
+      if (!def.spawnBiome.includes(biome)) continue;
+    }
+
+    makeMob(type, wx + 0.5, spawnY, wz + 0.5);
+    return;
   }
-
-  const light = lightAt(wx, spawnY, wz);
-  if (def.spawnLight === 'day' && light < 0.7) return;
-  if (def.spawnLight === 'dark' && light > 0.4) return;
-  if (def.spawnSurface && !def.spawnWater && spawnY < SEA_LEVEL) return;
-  if (def.spawnWater && spawnY > SEA_LEVEL) return;
-
-  makeMob(type, wx + 0.5, spawnY, wz + 0.5);
 }
 
 // ============================================================
