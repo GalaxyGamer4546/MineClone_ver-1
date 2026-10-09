@@ -996,7 +996,489 @@ addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
+  handCamera.aspect = innerWidth / innerHeight;
+  handCamera.updateProjectionMatrix();
 });
+
+// ============================================================
+// HELD ITEM (like Minecraft first-person hand)
+// ============================================================
+const handScene = new THREE.Scene();
+const handCamera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.01, 10);
+handCamera.position.set(0, 0, 0);
+
+// Full-screen warm light so the hand doesn't go black
+const handLight = new THREE.DirectionalLight(0xffffff, 1.0);
+handLight.position.set(1, 1, 1);
+handScene.add(handLight);
+handScene.add(new THREE.AmbientLight(0xffffff, 0.6));
+
+// Group holding the arm + item
+const handGroup = new THREE.Group();
+handScene.add(handGroup);
+
+// The arm (a simple skin-colored box angled into view)
+const armMat = new THREE.MeshLambertMaterial({ color: 0xd8a878 });
+const armMesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.7), armMat);
+armMesh.position.set(0.35, -0.28, -0.55);
+armMesh.rotation.set(-0.15, -0.25, 0.1);
+handGroup.add(armMesh);
+
+// The item slot — we'll swap the mesh here when the player changes hotbar
+const heldItemHolder = new THREE.Group();
+heldItemHolder.position.set(0.30, -0.20, -0.82);   // raised + slightly forward onto the palm
+heldItemHolder.rotation.set(0.35, -0.2, 0);         // tilt down-forward so the item "sits" in the hand
+handGroup.add(heldItemHolder);
+
+// ============================================================
+// IMPROVED ITEM MODELS
+// ============================================================
+
+function blob(color, rx, ry, rz, opacity) {
+  const mat = new THREE.MeshLambertMaterial({ color: color });
+  if (opacity !== undefined) { mat.transparent = true; mat.opacity = opacity; }
+  const geo = new THREE.SphereGeometry(1, 7, 5);
+  geo.scale(rx, ry, rz);
+  return new THREE.Mesh(geo, mat);
+}
+
+function capsule(color, radius, length, segments) {
+  const g = new THREE.Group();
+  const mat = new THREE.MeshLambertMaterial({ color: color });
+  const cyl = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, length, segments || 6), mat);
+  g.add(cyl);
+  const capTop = new THREE.Mesh(new THREE.SphereGeometry(radius, segments || 6, 4), mat);
+  capTop.position.y = length / 2;
+  g.add(capTop);
+  const capBot = new THREE.Mesh(new THREE.SphereGeometry(radius, segments || 6, 4), mat);
+  capBot.position.y = -length / 2;
+  g.add(capBot);
+  return g;
+}
+
+function makeMeatModel(baseColor, fatColor, hasBone) {
+  const g = new THREE.Group();
+  const meat = blob(baseColor, 0.13, 0.06, 0.09);
+  meat.rotation.x = 0.2;
+  g.add(meat);
+  const fat = blob(fatColor, 0.08, 0.02, 0.05);
+  fat.position.set(0.02, 0.055, 0.01);
+  fat.rotation.x = 0.2;
+  g.add(fat);
+  if (hasBone) {
+    const bone = capsule(0xf0f0e0, 0.022, 0.12, 5);
+    bone.position.set(-0.1, 0, -0.05);
+    bone.rotation.z = Math.PI / 2.2;
+    g.add(bone);
+  }
+  return g;
+}
+
+function makeChickenModel() {
+  const g = new THREE.Group();
+  const meat = blob(0xffe8b8, 0.09, 0.07, 0.11);
+  g.add(meat);
+  const bone = capsule(0xf0f0e0, 0.018, 0.1, 5);
+  bone.position.set(0.08, 0.02, -0.05);
+  bone.rotation.z = -Math.PI / 3;
+  g.add(bone);
+  const crisp = blob(0xe0b070, 0.06, 0.03, 0.07);
+  crisp.position.set(-0.02, 0.04, 0.02);
+  g.add(crisp);
+  return g;
+}
+
+function makeRottenFleshModel() {
+  const g = new THREE.Group();
+  const base = blob(0x8a6f5a, 0.12, 0.07, 0.1);
+  g.add(base);
+  for (let i = 0; i < 4; i++) {
+    const lump = blob(0x6a5040, 0.04, 0.03, 0.04);
+    lump.position.set(
+      (Math.random() - 0.5) * 0.14,
+      (Math.random() - 0.5) * 0.08,
+      (Math.random() - 0.5) * 0.12
+    );
+    g.add(lump);
+  }
+  return g;
+}
+
+function makeCoalModel() {
+  const g = new THREE.Group();
+  const base = blob(0x1a1a1a, 0.1, 0.09, 0.1);
+  g.add(base);
+  for (let i = 0; i < 5; i++) {
+    const facet = new THREE.Mesh(
+      new THREE.TetrahedronGeometry(0.05),
+      new THREE.MeshLambertMaterial({ color: 0x333333 })
+    );
+    facet.position.set(
+      (Math.random() - 0.5) * 0.14,
+      (Math.random() - 0.5) * 0.12,
+      (Math.random() - 0.5) * 0.14
+    );
+    facet.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3);
+    g.add(facet);
+  }
+  return g;
+}
+
+function makeIngotModel(color) {
+  const g = new THREE.Group();
+  const mat = new THREE.MeshLambertMaterial({ color: color });
+  const geo = new THREE.CylinderGeometry(0.1, 0.13, 0.06, 4);
+  geo.rotateY(Math.PI / 4);
+  const body = new THREE.Mesh(geo, mat);
+  body.scale.set(1, 1, 0.65);
+  g.add(body);
+  const top = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.1, 0.1, 0.005, 4),
+    new THREE.MeshLambertMaterial({ color: 0xffffff, transparent: true, opacity: 0.25 })
+  );
+  top.rotateY(Math.PI / 4);
+  top.scale.set(1, 1, 0.65);
+  top.position.y = 0.031;
+  g.add(top);
+  return g;
+}
+
+function makeDiamondModel() {
+  const g = new THREE.Group();
+  const mat = new THREE.MeshLambertMaterial({ color: 0x40e0ff, flatShading: true });
+  const top = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.12, 6), mat);
+  top.position.y = 0.06;
+  g.add(top);
+  const bottom = new THREE.Mesh(new THREE.ConeGeometry(0.1, 0.08, 6), mat);
+  bottom.position.y = -0.04;
+  bottom.rotation.x = Math.PI;
+  g.add(bottom);
+  const spark = new THREE.Mesh(
+    new THREE.SphereGeometry(0.03, 4, 3),
+    new THREE.MeshBasicMaterial({ color: 0xffffff })
+  );
+  spark.position.set(0.04, 0.06, 0.04);
+  g.add(spark);
+  return g;
+}
+
+function makeFeatherModel() {
+  const g = new THREE.Group();
+  const shaftMat = new THREE.MeshLambertMaterial({ color: 0x8a5a3a });
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.5, 4), shaftMat);
+  shaft.rotation.z = Math.PI / 2;
+  g.add(shaft);
+  const vaneMat = new THREE.MeshLambertMaterial({ color: 0xf4f4f4, side: THREE.DoubleSide });
+  const vane1 = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.16), vaneMat);
+  vane1.position.set(-0.02, 0, 0.01);
+  vane1.rotation.x = 0.3;
+  g.add(vane1);
+  const vane2 = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 0.16), vaneMat);
+  vane2.position.set(-0.02, 0, -0.01);
+  vane2.rotation.x = -0.3;
+  g.add(vane2);
+  return g;
+}
+
+function makeBoneModel() {
+  const g = new THREE.Group();
+  const mat = new THREE.MeshLambertMaterial({ color: 0xf0f0e0 });
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.4, 6), mat);
+  shaft.rotation.z = Math.PI / 2;
+  g.add(shaft);
+  for (const x of [-0.22, 0.22]) {
+    for (const y of [-0.05, 0.05]) {
+      const ball = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 5), mat);
+      ball.position.set(x, y, 0);
+      g.add(ball);
+    }
+  }
+  return g;
+}
+
+function makeStickModel() {
+  const mat = new THREE.MeshLambertMaterial({ color: 0x8a5a3a });
+  const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.035, 0.45, 5), mat);
+  stick.rotation.z = Math.PI / 2;
+  return stick;
+}
+
+function makeWoolModel() {
+  const g = new THREE.Group();
+  const mat = new THREE.MeshLambertMaterial({ color: 0xf0f0f0 });
+  const base = new THREE.Mesh(new THREE.SphereGeometry(0.12, 7, 5), mat);
+  g.add(base);
+  for (let i = 0; i < 6; i++) {
+    const bump = new THREE.Mesh(new THREE.SphereGeometry(0.05, 5, 4), mat);
+    const a = (i / 6) * Math.PI * 2;
+    bump.position.set(Math.cos(a) * 0.09, Math.sin(a * 1.5) * 0.06, Math.sin(a) * 0.09);
+    g.add(bump);
+  }
+  return g;
+}
+
+function makeSlimeballModel() {
+  const g = new THREE.Group();
+  const outer = new THREE.Mesh(
+    new THREE.SphereGeometry(0.11, 8, 6),
+    new THREE.MeshLambertMaterial({ color: 0x7ec87e, transparent: true, opacity: 0.7 })
+  );
+  g.add(outer);
+  const inner = new THREE.Mesh(
+    new THREE.SphereGeometry(0.05, 5, 4),
+    new THREE.MeshBasicMaterial({ color: 0xc0f0c0 })
+  );
+  g.add(inner);
+  return g;
+}
+
+function makeGunpowderModel() {
+  const g = new THREE.Group();
+  const mat = new THREE.MeshLambertMaterial({ color: 0x444444 });
+  for (let i = 0; i < 10; i++) {
+    const speck = new THREE.Mesh(new THREE.SphereGeometry(0.025, 4, 3), mat);
+    speck.position.set(
+      (Math.random() - 0.5) * 0.15,
+      (Math.random() - 0.5) * 0.08,
+      (Math.random() - 0.5) * 0.15
+    );
+    g.add(speck);
+  }
+  return g;
+}
+
+function makeArrowModel() {
+  const g = new THREE.Group();
+  const woodMat = new THREE.MeshLambertMaterial({ color: 0x8a5a3a });
+  const metalMat = new THREE.MeshLambertMaterial({ color: 0xd0d0d0 });
+  const featherMat = new THREE.MeshLambertMaterial({ color: 0xf4f4f4, side: THREE.DoubleSide });
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.5, 5), woodMat);
+  shaft.rotation.x = Math.PI / 2;
+  g.add(shaft);
+  const head = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.09, 4), metalMat);
+  head.rotation.x = -Math.PI / 2;
+  head.position.z = -0.29;
+  g.add(head);
+  for (let i = 0; i < 3; i++) {
+    const f = new THREE.Mesh(new THREE.PlaneGeometry(0.08, 0.06), featherMat);
+    f.position.z = 0.2;
+    f.rotation.y = (i / 3) * Math.PI * 2;
+    f.rotation.x = Math.PI / 2;
+    g.add(f);
+  }
+  return g;
+}
+
+function makeBatWingModel() {
+  const g = new THREE.Group();
+  const mat = new THREE.MeshLambertMaterial({ color: 0x5a4a6a, side: THREE.DoubleSide });
+  const shape = new THREE.Shape();
+  shape.moveTo(0, 0);
+  shape.lineTo(0.3, 0.05);
+  shape.lineTo(0.28, -0.12);
+  shape.lineTo(0.15, -0.08);
+  shape.lineTo(0.05, -0.15);
+  shape.lineTo(0, 0);
+  const geo = new THREE.ShapeGeometry(shape);
+  const wing = new THREE.Mesh(geo, mat);
+  g.add(wing);
+  const boneMat = new THREE.MeshLambertMaterial({ color: 0x2a1a3a });
+  for (const [x, y] of [[0.28, -0.12], [0.15, -0.08], [0.05, -0.15]]) {
+    const bone = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, Math.hypot(x, y), 4), boneMat);
+    bone.position.set(x / 2, y / 2, 0.005);
+    bone.rotation.z = Math.atan2(y, x) - Math.PI / 2;
+    g.add(bone);
+  }
+  return g;
+}
+
+function makeLeatherModel() {
+  const g = new THREE.Group();
+  const mat = new THREE.MeshLambertMaterial({ color: 0x8a5a3a, side: THREE.DoubleSide });
+  const shape = new THREE.Shape();
+  shape.moveTo(-0.15, 0.08);
+  shape.lineTo(0.15, 0.1);
+  shape.lineTo(0.18, -0.05);
+  shape.lineTo(0.1, -0.12);
+  shape.lineTo(-0.12, -0.1);
+  shape.lineTo(-0.18, 0.02);
+  shape.lineTo(-0.15, 0.08);
+  const geo = new THREE.ShapeGeometry(shape);
+  const hide = new THREE.Mesh(geo, mat);
+  hide.rotation.x = -Math.PI / 3;
+  g.add(hide);
+  const back = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ color: 0x6a4028, side: THREE.DoubleSide }));
+  back.rotation.x = -Math.PI / 3;
+  back.position.z = -0.02;
+  g.add(back);
+  return g;
+}
+
+function makeBedModel() {
+  const g = new THREE.Group();
+  const wood = new THREE.MeshLambertMaterial({ color: 0x8a5a3a });
+  const sheet = new THREE.MeshLambertMaterial({ color: 0xf0f0f0 });
+  const pillow = new THREE.MeshLambertMaterial({ color: 0xffffff });
+  const blanket = new THREE.MeshLambertMaterial({ color: 0xa03030 });
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.05, 0.28), wood);
+  g.add(frame);
+  const mat = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.06, 0.26), sheet);
+  mat.position.y = 0.055;
+  g.add(mat);
+  const bl = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.04, 0.26), blanket);
+  bl.position.set(0.05, 0.09, 0);
+  g.add(bl);
+  const pil = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.05, 0.24), pillow);
+  pil.position.set(-0.14, 0.1, 0);
+  g.add(pil);
+  return g;
+}
+
+function makeTorchModel() {
+  const g = new THREE.Group();
+  const wood = new THREE.MeshLambertMaterial({ color: 0x8a5a3a });
+  const flameOuter = new THREE.MeshBasicMaterial({ color: 0xff6020 });
+  const flameInner = new THREE.MeshBasicMaterial({ color: 0xffdd60 });
+  const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.3, 5), wood);
+  handle.rotation.x = Math.PI / 2;
+  g.add(handle);
+  const f1 = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.18, 6), flameOuter);
+  f1.rotation.x = -Math.PI / 2;
+  f1.position.z = -0.2;
+  g.add(f1);
+  const f2 = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.12, 5), flameInner);
+  f2.rotation.x = -Math.PI / 2;
+  f2.position.z = -0.21;
+  g.add(f2);
+  return g;
+}
+
+const ITEM_MODELS = {
+  // Materials
+  stick:        makeStickModel,
+  coal:         makeCoalModel,
+  iron:         () => makeIngotModel(0xd9a679),
+  gold:         () => makeIngotModel(0xffd700),
+  diamond:      makeDiamondModel,
+  wool:         makeWoolModel,
+  leather:      makeLeatherModel,
+  bone:         makeBoneModel,
+  feather:      makeFeatherModel,
+  arrow:        makeArrowModel,
+  gunpowder:    makeGunpowderModel,
+  slimeball:    makeSlimeballModel,
+  bat_wing:     makeBatWingModel,
+
+  // Food
+  raw_beef:     () => makeMeatModel(0xc25a5a, 0xe08a8a, false),
+  raw_porkchop: () => makeMeatModel(0xffb8b8, 0xffd8d8, true),
+  raw_mutton:   () => makeMeatModel(0xe07a7a, 0xf0a0a0, false),
+  raw_chicken:  makeChickenModel,
+  rotten_flesh: makeRottenFleshModel,
+
+  // Tools
+  wood_pickaxe:  () => makeToolModel(0x8a5a3a, 0x8a5a3a, 'pickaxe'),
+  stone_pickaxe: () => makeToolModel(0x8a5a3a, 0x808080, 'pickaxe'),
+  iron_pickaxe:  () => makeToolModel(0x8a5a3a, 0xd9a679, 'pickaxe'),
+  wood_axe:      () => makeToolModel(0x8a5a3a, 0x8a5a3a, 'axe'),
+  stone_axe:     () => makeToolModel(0x8a5a3a, 0x808080, 'axe'),
+  iron_axe:      () => makeToolModel(0x8a5a3a, 0xd9a679, 'axe'),
+  wood_sword:    () => makeToolModel(0x6d4c2a, 0x8a5a3a, 'sword'),
+  stone_sword:   () => makeToolModel(0x6d4c2a, 0x808080, 'sword'),
+  iron_sword:    () => makeToolModel(0x6d4c2a, 0xd9a679, 'sword'),
+
+  // Utility
+  bed:   makeBedModel,
+  torch: makeTorchModel,
+};
+
+function makeToolModel(handleColor, headColor, kind) {
+  const g = new THREE.Group();
+  const handleMat = new THREE.MeshLambertMaterial({ color: handleColor });
+  const headMat = new THREE.MeshLambertMaterial({ color: headColor });
+  const handle = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.045, 0.32), handleMat);
+  g.add(handle);
+  if (kind === 'pickaxe') {
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.05, 0.05), headMat);
+    head.position.z = -0.15;
+    g.add(head);
+    for (const x of [-0.12, 0.12]) {
+      const tip = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.05, 0.08), headMat);
+      tip.position.set(x, 0, -0.17);
+      g.add(tip);
+    }
+  } else if (kind === 'axe') {
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.18, 0.06), headMat);
+    head.position.set(0.06, 0, -0.15);
+    g.add(head);
+  } else if (kind === 'sword') {
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.02, 0.4), headMat);
+    blade.position.z = -0.2;
+    g.add(blade);
+    const guard = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.04, 0.04), handleMat);
+    guard.position.z = -0.01;
+    g.add(guard);
+  }
+  return g;
+}
+
+// Properly dispose + remove every child of the held item holder
+function clearHeldItem() {
+  while (heldItemHolder.children.length > 0) {
+    const c = heldItemHolder.children[0];
+    heldItemHolder.remove(c);
+    c.traverse(function (o) {
+      if (o.isMesh) {
+        if (o.geometry) o.geometry.dispose();
+        // Don't dispose shared materials (like atlasTexture-based block mats)
+        if (o.material && !o.material.map) {
+          if (Array.isArray(o.material)) o.material.forEach(m => m.dispose && m.dispose());
+          else if (o.material.dispose) o.material.dispose();
+        }
+      }
+    });
+  }
+}
+
+// Called whenever the hotbar selection changes or the stack changes
+function updateHeldItemMesh() {
+  clearHeldItem();
+  const slot = inventory[selectedSlot];
+  if (!slot) return;   // empty hand — just the arm shows
+
+  let blockId = null;
+  for (const id in BLOCKS) {
+    if (BLOCKS[id].name === slot.item) { blockId = +id; break; }
+  }
+
+  let mesh;
+  if (blockId !== null) {
+    const geo = new THREE.BoxGeometry(0.25, 0.25, 0.25);
+    const uv = uvForBlock(blockId);
+    const uvs = new Float32Array([
+      uv.u0, uv.v0,  uv.u1, uv.v0,  uv.u1, uv.v1,  uv.u0, uv.v1,
+      uv.u0, uv.v0,  uv.u1, uv.v0,  uv.u1, uv.v1,  uv.u0, uv.v1,
+      uv.u0, uv.v0,  uv.u1, uv.v0,  uv.u1, uv.v1,  uv.u0, uv.v1,
+      uv.u0, uv.v0,  uv.u1, uv.v0,  uv.u1, uv.v1,  uv.u0, uv.v1,
+      uv.u0, uv.v0,  uv.u1, uv.v0,  uv.u1, uv.v1,  uv.u0, uv.v1,
+      uv.u0, uv.v0,  uv.u1, uv.v0,  uv.u1, uv.v1,  uv.u0, uv.v1,
+    ]);
+    geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+    const mat = new THREE.MeshLambertMaterial({ map: atlasTexture });
+    mesh = new THREE.Mesh(geo, mat);
+  } else {
+    const builder = ITEM_MODELS[slot.item];
+    if (builder) {
+      mesh = builder();
+    } else {
+      const color = (ITEMS[slot.item] && ITEMS[slot.item].color) || 0x999999;
+      const mat = new THREE.MeshLambertMaterial({ color: color });
+      mesh = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.35), mat);
+      mesh.rotation.z = Math.PI / 4;
+    }
+  }
+  heldItemHolder.add(mesh);
+}
 
 // Lights
 const sun = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -1581,6 +2063,7 @@ addEventListener('keydown', function (e) {
     selectedSlot = +e.code.slice(5) - 1;
     refreshHotbarUI();
     showItemName();
+    updateHeldItemMesh();
   }
 });
 let recipeBookOpen = false;
@@ -1780,6 +2263,7 @@ function closeInventory() {
   returnGridToInventory();
   cursorItemEl.style.display = 'none';
   refreshHotbarUI();
+  updateHeldItemMesh();
   setTimeout(() => {
     if (!invOpen && renderer.domElement) {
       renderer.domElement.requestPointerLock();
@@ -2168,6 +2652,7 @@ addEventListener('mousedown', function (e) {
   // Give the item
   addToInventory(def.name, 1);
   refreshHotbarUI();
+  updateHeldItemMesh();
   toast('+1 ' + itemLabel(def.name));
 }, true);
 
@@ -2207,6 +2692,7 @@ addEventListener('mousedown', function (e) {
   slot.count -= 1;
   if (slot.count <= 0) inventory[selectedSlot] = null;
   refreshHotbarUI();
+  updateHeldItemMesh();
 });
 
 // END OF PART 2
@@ -2227,6 +2713,7 @@ addEventListener('mousedown', function (e) {
   slot.count -= 1;
   if (slot.count <= 0) inventory[selectedSlot] = null;
   refreshHotbarUI();
+  updateHeldItemMesh();
   renderHearts();
   toast('Ate ' + itemLabel(slot.item) + ' (+' + food.hunger + ')');
 
@@ -3341,6 +3828,7 @@ addEventListener('mousedown', function (e) {
   slot.count -= 1;
   if (slot.count <= 0) inventory[selectedSlot] = null;
   refreshHotbarUI();
+  updateHeldItemMesh();
 });
 
 // Sleep in bed
@@ -3560,6 +4048,13 @@ scene.add(highlightBox);
 // MAIN LOOP
 // ============================================================
 let lastT = performance.now();
+  // Update hand if the held item changed
+  const heldSlot = inventory[selectedSlot];
+  const heldKey = heldSlot ? heldSlot.item + ':' + heldSlot.count : null;
+  if (heldKey !== window._lastHeldKey) {
+    window._lastHeldKey = heldKey;
+    updateHeldItemMesh();
+  }
 const bob = { phase: 0, amount: 0 };
 function loop() {
   const now = performance.now();
@@ -3623,6 +4118,10 @@ function loop() {
   const bobY = Math.sin(bob.phase * 2) * 0.05 * bob.amount;
   const bobX = Math.cos(bob.phase)     * 0.03 * bob.amount;
   const roll = Math.sin(bob.phase)     * 0.015 * bob.amount;
+    // Hand follows the same bob rhythm (amplified a bit for weight)
+  handGroup.position.x =  bobX * 1.5;
+  handGroup.position.y = -bobY * 1.5;      // invert so it drops when camera rises
+  handGroup.rotation.z =  roll * 1.5;
 
   const sinYaw = Math.sin(player.yaw), cosYaw = Math.cos(player.yaw);
   const bobOffsetX =  bobX * cosYaw;
@@ -3651,7 +4150,11 @@ function loop() {
   const pi = document.getElementById('posinfo');
   if (pi) pi.textContent = Math.floor(player.pos.x) + ',' + Math.floor(player.pos.y) + ',' + Math.floor(player.pos.z);
 
-  renderer.render(scene, camera);
+renderer.render(scene, camera);
+renderer.autoClear = false;
+renderer.clearDepth();
+renderer.render(handScene, handCamera);
+renderer.autoClear = true;
   requestAnimationFrame(loop);
 }
 
@@ -3661,6 +4164,7 @@ function loop() {
 console.log('[MiniTerra 3D] streaming chunks...');
 updateChunkStreaming();
 refreshHotbarUI();
+updateHeldItemMesh();
 console.log('[MiniTerra 3D] ready. Render distance:', RENDER_DISTANCE, 'chunks');
 loop();
 </script>
